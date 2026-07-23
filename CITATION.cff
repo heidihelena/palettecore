@@ -9,6 +9,14 @@ authors:
 license: Apache-2.0
 version: 0.2.1
 date-released: 2026-07-23
+doi: 10.5281/zenodo.21515949
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21515949
+    description: "Concept DOI - resolves to the latest version"
+  - type: doi
+    value: 10.5281/zenodo.21515950
+    description: "Version DOI for 0.2.1"
 repository-code: "https://github.com/heidihelena/palettecore"
 keywords:
   - colour palette

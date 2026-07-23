@@ -1,5 +1,9 @@
 # palettecore
 
+[![PyPI](https://img.shields.io/pypi/v/palettecore)](https://pypi.org/project/palettecore/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21515949.svg)](https://doi.org/10.5281/zenodo.21515949)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 Derive, optimise and **audit** a scientific colour palette from one seed colour.
 
 Existing tools let researchers pick established colour maps. This one starts

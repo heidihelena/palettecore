@@ -1,0 +1,22 @@
+Package: palettecore
+Title: Derive, Optimise and Audit a Scientific Colour Palette from One Seed Colour
+Version: 0.2.0
+Authors@R: person("Heidi Helena", "Andersén", role = c("aut", "cre"),
+    email = "andersenheidihelena@gmail.com",
+    comment = c(ORCID = "0000-0001-5923-5865"))
+Description: Generates sequential, diverging and categorical colour palettes
+    from a single seed colour in OKLCH with CIEDE2000 spacing, and audits
+    every palette under simulated colour-vision deficiency (Machado et al.
+    2009 matrices, severity 1.0), greyscale conversion, sRGB gamut and WCAG
+    contrast. Mirrors the Python reference implementation and is validated
+    against shared parity fixtures. Thresholds are configurable design rules,
+    not established accessibility cut-offs.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: R (>= 4.1)
+Imports: stats, utils
+Suggests: ggplot2, jsonlite, testthat (>= 3.0.0)
+URL: https://github.com/heidihelena/palettecore
+BugReports: https://github.com/heidihelena/palettecore/issues

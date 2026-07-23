@@ -6,11 +6,14 @@ Authors@R: person("Heidi Helena", "Andersén", role = c("aut", "cre"),
     comment = c(ORCID = "0000-0001-5923-5865"))
 Description: Generates sequential, diverging and categorical colour palettes
     from a single seed colour in OKLCH with CIEDE2000 spacing, and audits
-    every palette under simulated colour-vision deficiency (Machado et al.
-    2009 matrices, severity 1.0), greyscale conversion, sRGB gamut and WCAG
-    contrast. Mirrors the Python reference implementation and is validated
-    against shared parity fixtures. Thresholds are configurable design rules,
-    not established accessibility cut-offs.
+    every palette under simulated colour-vision deficiency, greyscale
+    conversion, sRGB gamut and WCAG contrast. Colour-vision deficiency is
+    simulated at severity 1.0 with the model of Machado, Oliveira and
+    Fernandes (2009) <doi:10.1109/TVCG.2009.113>; the design rationale
+    follows Crameri, Shephard and Heron (2020) <doi:10.1038/s41467-020-19160-7>.
+    Mirrors the 'Python' reference implementation maintained in the same
+    repository and is validated against shared parity fixtures. Thresholds
+    are configurable design rules, not established accessibility cut-offs.
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

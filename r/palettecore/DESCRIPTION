@@ -1,6 +1,6 @@
 Package: palettecore
 Title: Derive, Optimise and Audit a Scientific Colour Palette from One Seed Colour
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: person("Heidi Helena", "Andersén", role = c("aut", "cre"),
     email = "andersenheidihelena@gmail.com",
     comment = c(ORCID = "0000-0001-5923-5865"))

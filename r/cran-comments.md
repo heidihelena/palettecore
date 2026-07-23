@@ -1,8 +1,12 @@
-# cran-comments for palettecore 0.2.0
+# cran-comments for palettecore 0.2.2
+
+(0.2.0 is the version currently in CRAN incoming review; 0.2.2 is the
+prepared update / resubmission with audit-correctness fixes.)
 
 ## Test environments
 
 - local: macOS (Darwin 25.5.0), R 4.4.2
+- GitHub Actions: ubuntu-latest (R release), see .github/workflows/ci.yml
 
 ## R CMD check --as-cran results
 
@@ -11,6 +15,15 @@
 - "New submission" — first submission of this package.
 - "unable to verify current time" — local network restriction during the
   check, not a package property.
+
+## Changes in 0.2.2
+
+- Every diagnostic is now computed on the 8-bit quantised colours actually
+  returned as HEX, never on internal floating-point values (fixes rare
+  false-pass/false-warning threshold results near the boundary).
+- anchor = "exact" now also snaps diverging palettes to the seed.
+- Input validation for `use`, threshold names and threshold values.
+- Diverging palettes require n >= 3 and report an arm-structure diagnostic.
 
 ## Notes for reviewers
 

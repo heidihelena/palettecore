@@ -60,46 +60,51 @@ DEFAULT_THRESHOLDS <- list(
   candidates <- do.call(rbind, cand_list)
 
   seed_rgb <- .clip01(oklab_to_srgb(oklch_to_oklab(c(L_seed, C_seed, H_seed))))
-  chosen <- list(seed_rgb)
 
-  score <- function(cand, current) {
+  # CVD simulations are deterministic per colour - precompute once instead
+  # of re-simulating inside every score evaluation (the dominant cost).
+  pack <- function(rgb) {
+    sims <- lapply(CVD_CONDITIONS, function(cond) simulate_cvd(rgb, cond))
+    names(sims) <- CVD_CONDITIONS
+    list(rgb = rgb, sims = sims)
+  }
+  cand_packed <- lapply(seq_len(nrow(candidates)), function(i) pack(candidates[i, ]))
+  chosen <- list(pack(seed_rgb))
+
+  score <- function(p, current) {
     s <- Inf
     for (x in current) {
-      s <- min(s, ciede2000(cand, x))
+      s <- min(s, ciede2000(p$rgb, x$rgb))
       for (cond in CVD_CONDITIONS) {
-        s <- min(s, ciede2000(simulate_cvd(cand, cond), simulate_cvd(x, cond)))
+        s <- min(s, ciede2000(p$sims[[cond]], x$sims[[cond]]))
       }
     }
     s
   }
 
   while (length(chosen) < n) {
-    scores <- vapply(
-      seq_len(nrow(candidates)),
-      function(i) score(candidates[i, ], chosen),
-      numeric(1)
-    )
-    chosen[[length(chosen) + 1L]] <- candidates[which.max(scores), ]
+    scores <- vapply(cand_packed, function(p) score(p, chosen), numeric(1))
+    chosen[[length(chosen) + 1L]] <- cand_packed[[which.max(scores)]]
   }
 
-  sub_idx <- seq(1, nrow(candidates), by = 3)
+  sub_idx <- seq(1, length(cand_packed), by = 3)
   for (pass in 1:2) {
     for (i in 2:n) {
       rest <- chosen[-i]
-      best_rgb <- chosen[[i]]
+      best_p <- chosen[[i]]
       best_s <- score(chosen[[i]], rest)
       for (j in sub_idx) {
-        s <- score(candidates[j, ], rest)
+        s <- score(cand_packed[[j]], rest)
         if (s > best_s) {
-          best_rgb <- candidates[j, ]
+          best_p <- cand_packed[[j]]
           best_s <- s
         }
       }
-      chosen[[i]] <- best_rgb
+      chosen[[i]] <- best_p
     }
   }
 
-  do.call(rbind, chosen)
+  do.call(rbind, lapply(chosen, function(p) p$rgb))
 }
 
 .diverging <- function(seed_lch, n, background_rgb) {
@@ -184,6 +189,22 @@ DEFAULT_THRESHOLDS <- list(
     if (spread > 0.45) {
       warnings <- c(warnings, "Large lightness spread - one category may look more important than others.")
     }
+  } else if (kind == "diverging") {
+    i_max <- which.max(grey)
+    left_ok <- is_monotonic(grey[1:i_max])
+    right_ok <- is_monotonic(grey[i_max:n])
+    centre_ok <- i_max > 1 && i_max < n
+    diag$diverging_structure <- list(
+      centre_index = i_max - 1L,  # 0-based, matching the Python reference
+      arms_monotonic = left_ok && right_ok,
+      centre_interior = centre_ok
+    )
+    if (!(left_ok && right_ok && centre_ok)) {
+      warnings <- c(warnings, paste(
+        "Diverging structure is broken - lightness should rise to an interior",
+        "light centre and fall again; an arm reverses or the centre sits at an end."
+      ))
+    }
   }
 
   contrasts <- round(apply(rgbs, 1, contrast_ratio, rgb2 = background_rgb), 2)
@@ -248,10 +269,25 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   if (!anchor %in% c("path", "exact")) {
     stop(sprintf("Unknown anchor policy: '%s'", anchor))
   }
+  if (!use %in% c("data_fill", "text", "line", "UI")) {
+    stop(sprintf("Unknown use: '%s' (expected 'data_fill', 'text', 'line' or 'UI')", use))
+  }
   if (length(n) != 1 || is.na(n) || n != as.integer(n) || n < 2 || n > 24) {
     stop(sprintf("n must be an integer between 2 and 24, got %s", n))
   }
   n <- as.integer(n)
+  if (kind == "diverging" && n < 3) {
+    stop("diverging palettes need n >= 3 (two poles and a centre)")
+  }
+  for (key in names(thresholds %||% list())) {
+    if (!key %in% names(DEFAULT_THRESHOLDS)) {
+      stop(sprintf("Unknown threshold name: '%s'", key))
+    }
+    val <- thresholds[[key]]
+    if (!is.numeric(val) || length(val) != 1 || !is.finite(val) || val < 0) {
+      stop(sprintf("Threshold '%s' must be a finite non-negative number", key))
+    }
+  }
 
   th <- utils::modifyList(DEFAULT_THRESHOLDS, as.list(thresholds %||% list()))
   seed_lch <- hex_to_oklch(seed)
@@ -264,10 +300,15 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   )
 
   seed_rgb <- hex_to_srgb(seed)
-  if (kind == "sequential" && anchor == "exact") {
+  if (kind %in% c("sequential", "diverging") && anchor == "exact") {
     dists <- apply(rgbs, 1, ciede2000, rgb2 = seed_rgb)
     rgbs[which.min(dists), ] <- seed_rgb
   }
+
+  # Quantise to the 8-bit colours the caller actually receives BEFORE any
+  # diagnostic runs - auditing float values can flip threshold results.
+  hexes <- apply(rgbs, 1, srgb_to_hex)
+  rgbs <- t(vapply(hexes, hex_to_srgb, numeric(3)))
 
   audit <- .audit(rgbs, kind, background_rgb, use, th)
   diag <- audit$diagnostics
@@ -287,7 +328,7 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
 
   structure(
     list(
-      hexes = apply(rgbs, 1, srgb_to_hex),
+      hexes = unname(hexes),
       kind = kind,
       seed = toupper(if (startsWith(seed, "#")) seed else paste0("#", seed)),
       background = background,

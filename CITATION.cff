@@ -7,8 +7,8 @@ authors:
     given-names: "Heidi Helena"
     orcid: "https://orcid.org/0000-0001-5923-5865"
 license: Apache-2.0
-version: 0.2.1
-date-released: 2026-07-23
+version: 0.2.2
+date-released: 2026-07-24
 doi: 10.5281/zenodo.21515949
 identifiers:
   - type: doi

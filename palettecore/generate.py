@@ -150,32 +150,40 @@ def _categorical(seed_lch, n):
     seed_rgb = np.clip(
         oklab_to_srgb(oklch_to_oklab(np.array([L_seed, C_seed, H_seed]))), 0, 1
     )
-    chosen = [seed_rgb]
 
-    def score(cand, current):
+    # CVD simulations are deterministic per colour — precompute once instead
+    # of re-simulating inside every score evaluation (the dominant cost).
+    def _pack(rgb):
+        return (rgb, {c: simulate_cvd(rgb, c) for c in CONDITIONS})
+
+    cand_packed = [_pack(c) for c in candidates]
+    chosen = [_pack(seed_rgb)]
+
+    def score(packed, current):
+        rgb, sims = packed
         s = np.inf
-        for x in current:
-            s = min(s, ciede2000(cand, x))
+        for x_rgb, x_sims in current:
+            s = min(s, ciede2000(rgb, x_rgb))
             for cond in CONDITIONS:
-                s = min(s, ciede2000(simulate_cvd(cand, cond), simulate_cvd(x, cond)))
+                s = min(s, ciede2000(sims[cond], x_sims[cond]))
         return s
 
     while len(chosen) < n:
-        scores = [score(c, chosen) for c in candidates]
-        chosen.append(candidates[int(np.argmax(scores))])
+        scores = [score(p, chosen) for p in cand_packed]
+        chosen.append(cand_packed[int(np.argmax(scores))])
 
     # Swap-improvement: try to lift the weakest link.
     for _ in range(2):
         for i in range(1, n):  # never move the seed anchor
             rest = chosen[:i] + chosen[i + 1 :]
-            best_rgb, best_s = chosen[i], score(chosen[i], rest)
-            for c in candidates[::3]:
-                s = score(c, rest)
+            best_p, best_s = chosen[i], score(chosen[i], rest)
+            for p in cand_packed[::3]:
+                s = score(p, rest)
                 if s > best_s:
-                    best_rgb, best_s = c, s
-            chosen[i] = best_rgb
+                    best_p, best_s = p, s
+            chosen[i] = best_p
 
-    return np.array(chosen)
+    return np.array([rgb for rgb, _ in chosen])
 
 
 # ---------------------------------------------------------------- diverging
@@ -246,6 +254,21 @@ def _audit(rgbs, kind, background_rgb, use, thresholds):
             warnings.append(
                 "Large lightness spread — one category may look more important than others."
             )
+    elif kind == "diverging":
+        i_max = int(np.argmax(grey))
+        left_ok = is_monotonic(grey[: i_max + 1])
+        right_ok = is_monotonic(grey[i_max:])
+        centre_ok = 0 < i_max < n - 1
+        diag["diverging_structure"] = {
+            "centre_index": i_max,
+            "arms_monotonic": bool(left_ok and right_ok),
+            "centre_interior": centre_ok,
+        }
+        if not (left_ok and right_ok and centre_ok):
+            warnings.append(
+                "Diverging structure is broken — lightness should rise to an interior "
+                "light centre and fall again; an arm reverses or the centre sits at an end."
+            )
 
     contrasts = [round(contrast_ratio(c, background_rgb), 2) for c in rgbs]
     diag["contrast_vs_background"] = contrasts
@@ -297,16 +320,33 @@ def generate_palette(
     kind:   'sequential' | 'diverging' | 'categorical'
     use:    'data_fill' | 'text' | 'line' | 'UI'
     anchor: 'path' (seed defines the path; exact HEX may not appear) or
-            'exact' (nearest sequential stop snapped to the seed, at the
-            cost of slightly uneven spacing). Categorical palettes always
-            contain the seed exactly, regardless of this setting.
+            'exact' (nearest sequential/diverging stop snapped to the seed,
+            at the cost of slightly uneven spacing). Categorical palettes
+            always contain the seed exactly, regardless of this setting.
+
+    Every diagnostic is computed on the 8-bit quantised colours that are
+    actually returned as HEX, never on internal floating-point values, so
+    the audit describes exactly the palette the caller receives.
     """
     if kind not in ("sequential", "diverging", "categorical"):
         raise ValueError(f"Unknown palette kind: {kind!r}")
     if anchor not in ("path", "exact"):
         raise ValueError(f"Unknown anchor policy: {anchor!r}")
+    if use not in ("data_fill", "text", "line", "UI"):
+        raise ValueError(
+            f"Unknown use: {use!r} (expected 'data_fill', 'text', 'line' or 'UI')"
+        )
     if not isinstance(n, int) or not 2 <= n <= 24:
         raise ValueError(f"n must be an integer between 2 and 24, got {n!r}")
+    if kind == "diverging" and n < 3:
+        raise ValueError("diverging palettes need n >= 3 (two poles and a centre)")
+    for key, val in (thresholds or {}).items():
+        if key not in DEFAULT_THRESHOLDS:
+            raise ValueError(
+                f"Unknown threshold name: {key!r} (expected one of {sorted(DEFAULT_THRESHOLDS)})"
+            )
+        if not isinstance(val, (int, float)) or not np.isfinite(val) or val < 0:
+            raise ValueError(f"Threshold {key!r} must be a finite non-negative number, got {val!r}")
 
     thresholds = {**DEFAULT_THRESHOLDS, **(thresholds or {})}
     seed_lch = hex_to_oklch(seed)
@@ -320,9 +360,14 @@ def generate_palette(
         rgbs = _categorical(seed_lch, n)
 
     seed_rgb = hex_to_srgb(seed)
-    if kind == "sequential" and anchor == "exact":
+    if kind in ("sequential", "diverging") and anchor == "exact":
         i_near = int(np.argmin([ciede2000(c, seed_rgb) for c in rgbs]))
         rgbs[i_near] = seed_rgb
+
+    # Quantise to the 8-bit colours the caller actually receives BEFORE any
+    # diagnostic runs — auditing float values can flip threshold results.
+    hexes = [srgb_to_hex(c) for c in rgbs]
+    rgbs = np.array([hex_to_srgb(h) for h in hexes])
 
     diag, warnings = _audit(rgbs, kind, background_rgb, use, thresholds)
     diag["anchor"] = anchor if kind != "categorical" else "exact"
@@ -339,7 +384,7 @@ def generate_palette(
         warnings.append("Seed is near-neutral — hue is poorly defined; family hue is arbitrary.")
 
     return PaletteResult(
-        hexes=[srgb_to_hex(c) for c in rgbs],
+        hexes=hexes,
         kind=kind,
         seed=seed.upper() if seed.startswith("#") else "#" + seed.upper(),
         background=background,

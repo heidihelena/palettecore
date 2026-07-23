@@ -24,11 +24,26 @@ Every palette ships with:
 
 - adjacent / pairwise **CIEDE2000** distances under normal vision
 - the same distances under simulated **protanopia, deuteranopia, tritanopia**
-- **lightness monotonicity** and greyscale luminance (what print does to it)
+- **lightness monotonicity** and relative luminance (a greyscale proxy —
+  real print output depends on the printer's colour management)
 - **sRGB gamut** status (chroma is clamped, never channel-clipped)
 - **WCAG contrast** against the declared background, judged by declared use
 - **warnings** whenever a threshold is not met — the honest output for seeds
   that cannot satisfy every constraint at once
+
+Every diagnostic is computed on the 8-bit quantised colours actually returned
+as HEX (since 0.2.2), so the audit describes exactly the palette you receive.
+
+## Install
+
+```bash
+pip install palettecore
+```
+
+```r
+install.packages("palettecore", repos = "https://heidihelena.r-universe.dev")
+# CRAN submission under review
+```
 
 ## Usage
 
@@ -139,7 +154,11 @@ it — one reference algorithm, two frontends.
 
 ## Roadmap
 
+- [x] PyPI packaging (`pip install palettecore`)
+- [ ] CRAN release (submitted, under review)
 - [ ] `use="text"` mode that *constrains* generation, not just warns
 - [ ] Configurable severity (<1.0) for the CVD simulations
 - [ ] Fixture-level comparison against colorspacious/colorblindr
-- [ ] PyPI / CRAN packaging
+- [ ] Vectorised CIEDE2000 for faster categorical generation (currently
+  ~2s for n=8, ~24s for n=24)
+- [ ] A methods/validation document

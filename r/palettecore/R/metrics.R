@@ -1,5 +1,12 @@
 # Perceptual and accessibility metrics — mirrors palettecore/metrics.py.
 
+#' CIEDE2000 colour difference between two sRGB colours
+#'
+#' Computed via CIELAB under D65 (Sharma et al. 2005 formulation).
+#'
+#' @param rgb1,rgb2 Numeric vectors of length 3, sRGB channels in \[0, 1\].
+#' @return CIEDE2000 distance (0 for identical colours, about 100 for black vs white).
+#' @export
 ciede2000 <- function(rgb1, rgb2) {
   lab1 <- srgb_to_cielab(rgb1)
   lab2 <- srgb_to_cielab(rgb2)
@@ -68,6 +75,11 @@ relative_luminance <- function(rgb) {
   0.2126 * lin[1] + 0.7152 * lin[2] + 0.0722 * lin[3]
 }
 
+#' WCAG 2.x contrast ratio between two sRGB colours
+#'
+#' @param rgb1,rgb2 Numeric vectors of length 3, sRGB channels in \[0, 1\].
+#' @return Contrast ratio between 1 and 21.
+#' @export
 contrast_ratio <- function(rgb1, rgb2) {
   y1 <- relative_luminance(rgb1)
   y2 <- relative_luminance(rgb2)

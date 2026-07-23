@@ -232,6 +232,12 @@ DEFAULT_THRESHOLDS <- list(
 #' @param thresholds Named list overriding the default dE floors.
 #' @param anchor "path" or "exact" (categorical always contains the seed).
 #' @return List with hexes, diagnostics and warnings.
+#' @importFrom utils modifyList
+#' @importFrom stats setNames
+#' @examples
+#' r <- generate_palette("#8B6FC9", n = 4, kind = "sequential")
+#' r$hexes
+#' r$warnings
 #' @export
 generate_palette <- function(seed, n = 8L, kind = "sequential",
                              background = "#FFFFFF", use = "data_fill",

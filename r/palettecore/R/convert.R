@@ -7,6 +7,11 @@
 .cbrt <- function(x) sign(x) * abs(x)^(1 / 3)
 .clip01 <- function(x) pmin(pmax(x, 0), 1)
 
+#' Convert a HEX colour to sRGB
+#'
+#' @param hex_str Colour as HEX string, e.g. "#8B6FC9" (3- or 6-digit).
+#' @return Numeric vector of length 3, sRGB channels in \[0, 1\].
+#' @export
 hex_to_srgb <- function(hex_str) {
   s <- sub("^#", "", trimws(hex_str))
   if (nchar(s) == 3) s <- paste0(strsplit(s, "")[[1]], strsplit(s, "")[[1]], collapse = "")
@@ -16,6 +21,11 @@ hex_to_srgb <- function(hex_str) {
   vapply(c(1, 3, 5), function(i) strtoi(substr(s, i, i + 1), 16L) / 255, numeric(1))
 }
 
+#' Convert an sRGB colour to HEX
+#'
+#' @param rgb Numeric vector of length 3, sRGB channels in \[0, 1\].
+#' @return HEX string, e.g. "#8B6FC9".
+#' @export
 srgb_to_hex <- function(rgb) {
   v <- as.integer(round(.clip01(rgb) * 255))
   sprintf("#%02X%02X%02X", v[1], v[2], v[3])
@@ -64,7 +74,18 @@ oklch_to_oklab <- function(lch) {
   c(lch[1], lch[2] * cos(h), lch[2] * sin(h))
 }
 
+#' Convert a HEX colour to OKLCH
+#'
+#' @param hex_str Colour as HEX string.
+#' @return Numeric vector c(L, C, H): OKLab lightness, chroma, hue in degrees.
+#' @export
 hex_to_oklch <- function(hex_str) oklab_to_oklch(srgb_to_oklab(hex_to_srgb(hex_str)))
+
+#' Convert an OKLCH colour to HEX
+#'
+#' @param lch Numeric vector c(L, C, H).
+#' @return HEX string (sRGB, channel values clipped to \[0, 1\]).
+#' @export
 oklch_to_hex <- function(lch) srgb_to_hex(oklab_to_srgb(oklch_to_oklab(lch)))
 
 .M_XYZ <- matrix(c(
@@ -87,6 +108,16 @@ in_srgb_gamut <- function(lch, eps = 1e-6) {
   all(lin >= -eps & lin <= 1 + eps)
 }
 
+#' Largest OKLCH chroma at (L, H) inside the sRGB gamut
+#'
+#' Binary search; matches the Python reference implementation.
+#'
+#' @param L OKLab lightness in \[0, 1\].
+#' @param H OKLCH hue in degrees.
+#' @param c_hi Upper search bound for chroma.
+#' @param tol Search tolerance.
+#' @return Maximum displayable chroma (0 if (L, H) itself is out of gamut).
+#' @export
 max_chroma <- function(L, H, c_hi = 0.4, tol = 1e-4) {
   if (!in_srgb_gamut(c(L, 0, H))) return(0)
   lo <- 0

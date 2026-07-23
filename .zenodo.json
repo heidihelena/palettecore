@@ -1,0 +1,30 @@
+{
+  "title": "palettecore: derive, optimise and audit a scientific colour palette from one seed colour",
+  "description": "Generates sequential, diverging and categorical colour palettes from a single seed colour in OKLCH with CIEDE2000 spacing, and audits every palette under simulated colour-vision deficiency (Machado et al. 2009 matrices, severity 1.0), greyscale conversion, sRGB gamut and WCAG contrast. Python reference implementation and R package validated against shared parity fixtures. Thresholds are configurable design rules, not established accessibility cut-offs.",
+  "creators": [
+    {
+      "name": "Andersén, Heidi Helena",
+      "orcid": "0000-0001-5923-5865"
+    }
+  ],
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "keywords": [
+    "colour palette",
+    "color vision deficiency",
+    "CIEDE2000",
+    "OKLCH",
+    "accessibility",
+    "scientific visualisation",
+    "Python",
+    "R"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1038/s41467-020-19160-7",
+      "relation": "isDerivedFrom",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    }
+  ]
+}

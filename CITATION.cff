@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use palettecore, please cite it using this metadata."
+title: "palettecore: derive, optimise and audit a scientific colour palette from one seed colour"
+type: software
+authors:
+  - family-names: "Andersén"
+    given-names: "Heidi Helena"
+    orcid: "https://orcid.org/0000-0001-5923-5865"
+license: Apache-2.0
+version: 0.2.0
+date-released: 2026-07-23
+repository-code: "https://github.com/heidihelena/palettecore"
+keywords:
+  - colour palette
+  - color vision deficiency
+  - CIEDE2000
+  - OKLCH
+  - accessibility
+  - scientific visualisation
+references:
+  - type: article
+    title: "The misuse of colour in science communication"
+    authors:
+      - family-names: "Crameri"
+        given-names: "Fabio"
+      - family-names: "Shephard"
+        given-names: "Grace E."
+      - family-names: "Heron"
+        given-names: "Philip J."
+    journal: "Nature Communications"
+    volume: 11
+    year: 2020
+    doi: "10.1038/s41467-020-19160-7"

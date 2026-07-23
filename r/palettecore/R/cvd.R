@@ -30,11 +30,30 @@ CVD_CONDITIONS <- names(MACHADO_10)
   as.vector(MACHADO_10[[condition]] %*% srgb_to_linear(rgb))
 }
 
+#' Simulate colour-vision deficiency (complete dichromacy)
+#'
+#' Machado et al. (2009) matrices at severity 1.0 on the paper's \[0, 1\]
+#' scale, applied in linear RGB and clamped to the displayable range.
+#'
+#' @param rgb Numeric vector of length 3, sRGB channels in \[0, 1\].
+#' @param condition One of "protanopia", "deuteranopia", "tritanopia".
+#' @return Simulated sRGB colour, clamped to \[0, 1\].
+#' @export
 simulate_cvd <- function(rgb, condition) {
   lin <- .clip01(.simulate_linear(rgb, condition))
   .clip01(linear_to_srgb(lin))
 }
 
+#' Pre-clamp gamut excursion of a CVD simulation
+#'
+#' Largest linear-RGB excursion outside \[0, 1\] before clamping. 0 means the
+#' simulated colour was displayable as-is; larger values mean clamping
+#' altered the colour and measured separations involving it should be read
+#' with that in mind.
+#'
+#' @inheritParams simulate_cvd
+#' @return Non-negative excursion magnitude in linear RGB.
+#' @export
 out_of_gamut_excursion <- function(rgb, condition) {
   lin <- .simulate_linear(rgb, condition)
   max(0, max(lin - 1), max(-lin))

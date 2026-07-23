@@ -9,7 +9,7 @@ from .cvd import CONDITIONS, out_of_gamut_excursion, simulate_cvd
 from .generate import DEFAULT_THRESHOLDS, PaletteResult, generate_palette
 from .metrics import ciede2000, contrast_ratio
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __all__ = [
     "generate_palette",
     "PaletteResult",

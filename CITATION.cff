@@ -7,7 +7,7 @@ authors:
     given-names: "Heidi Helena"
     orcid: "https://orcid.org/0000-0001-5923-5865"
 license: Apache-2.0
-version: 0.2.0
+version: 0.2.1
 date-released: 2026-07-23
 repository-code: "https://github.com/heidihelena/palettecore"
 keywords:

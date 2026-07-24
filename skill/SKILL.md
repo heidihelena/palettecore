@@ -73,6 +73,20 @@ ggplot(df, aes(x, y, colour = group)) + geom_point() +
 - `seed_nearest_stop_deltaE` — how far the exact seed HEX is from the nearest stop
   (`anchor="exact"` forces it in, at a small spacing cost; categorical always contains the seed).
 
+## Practical starting points (empirical, v0.2.2 defaults — see docs/seed-guidance.md)
+- **One seed for both kinds:** OKLCH L 0.55–0.75, chroma ≥ 0.12, hue 30°–270°.
+- **Sequential:** seed hues ~340°–15° fail deuteranopia at n = 8 — suggest shifting
+  hue or reducing n *before* generating; 285°–300° (violet) passes but is
+  tritanopia-tight, expect the pale-end warning first.
+- **Categorical:** the failure zone is murky seed chroma (~0.05–0.09); steer the
+  researcher to chroma ≥ 0.12 or to a deliberate near-grey anchor.
+- **n is the binding constraint:** one-hue sequential ramps hold 5–7 steps with
+  margin, 8 is the ceiling, 9+ fails for every hue — offer binning or labels, not
+  a different seed.
+- These are grid-resolution-bounded sweeps under default settings (white
+  background, severity-1.0 dichromacy). They shape your *suggestions*; the
+  generated palette's own audit remains the check you relay.
+
 ## Failure modes (non-negotiable)
 - If the researcher asks for "8 accessible colours" from a seed that cannot support them, deliver
   the palette **with** its warnings and the trade-off options (fewer colours, looser harmony,

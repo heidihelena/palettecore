@@ -72,6 +72,23 @@ the full machine-readable audit):
 python3 -m palettecore "#8B6FC9" -n 8 --kind sequential --format json
 ```
 
+## Choosing a seed (and n)
+
+Some seeds start inside a known failure zone; the map is in
+[docs/seed-guidance.md](docs/seed-guidance.md) (reproducible with
+`tools/seed_sweep.py`). The short version, under package-default thresholds:
+
+- One seed that serves both kinds: **L 0.55–0.75, chroma ≥ 0.12, hue 30°–270°**.
+- Sequential ramps from seed hues ~340°–15° fail deuteranopia at n = 8;
+  285°–300° is tritanopia-tight (the pale end warns first as n grows).
+- Categorical's failure zone is **murky chroma (~0.05–0.09)** — commit to
+  colour (≥ 0.12) or to near-grey, not the band between.
+- **n dominates:** a one-hue sequential ramp holds 5–7 steps comfortably,
+  8 is near the ceiling for every hue, 9+ fails everywhere tested.
+
+Region guidance never replaces the per-palette audit; the diagnostics that
+ship with your palette are the numbers that bind.
+
 ## How it works
 
 All work happens in **OKLCH** (path construction, gamut clamping) with

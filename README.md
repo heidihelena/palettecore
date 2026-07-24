@@ -14,6 +14,15 @@ and a generator that returns bare HEX codes is hiding the second one.
 Grounded in Crameri, Shephard & Heron (2020), *The misuse of colour in science
 communication*, Nature Communications 11:5444.
 
+![Example palettes: sequential, diverging, categorical, and a cubehelix-style
+run, each audited](docs/example_palettes.png)
+
+Four palettes from one seed each, every one carrying its audit
+(`tools/make_gallery.py` regenerates this). The bottom row is a **helix**
+through OKLCH — lightness climbs while hue rotates — a sequential scale that
+stays ordered even in greyscale. It came out of a small cross-modal art
+experiment (see *Does music have a colour?* below).
+
 Free and open source, Apache-2.0. Python core now; R package with
 `scale_colour_accessible()` / `scale_fill_accessible()` in `r/`, checked
 against the same fixtures.
@@ -180,6 +189,23 @@ warn, never silently pass).
 cross-language contract: conversions and distances must match within 1e-6,
 palette HEX codes exactly. The R implementation in `r/` is validated against
 it — one reference algorithm, two frontends.
+
+## Does music have a colour?
+
+An inclusive art experiment built on the same engine lives in
+[`experiments/`](experiments/): map the 12 pitch classes to a **helix** through
+colour space — angle = pitch class, height = lightness = pitch. Every note gets
+a colour; a rising scale becomes the cubehelix palette above.
+
+It is framed as art, not a tool, on purpose. The pitch-class → hue mapping is a
+*designed* convention (Newton and Scriabin chose different colours for C), so
+the piece asks the question rather than answering it. What the audit *can* say
+honestly is worked out in the experiment's README, minimum-not-mean: the colour
+carries pitch **height and octave** to every viewer including colour-blind ones
+(lightness survives simulated CVD), while fine semitone identity holds only for
+normal vision — the frontier sweep finds the code becomes semitone-safe for
+everyone only at ≤4 pitch classes per octave. The colours are checked so a
+colour-blind viewer and a hearing-different viewer meet in the same piece.
 
 ## Roadmap
 

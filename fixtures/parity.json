@@ -895,6 +895,63 @@
     "#1F0F3A"
    ],
    "warnings_count": 0
+  },
+  {
+   "spec": {
+    "seed": "#B57EDC",
+    "n": 8,
+    "kind": "categorical",
+    "vividness": 1.0
+   },
+   "hexes": [
+    "#B57EDC",
+    "#31CE3F",
+    "#EF286D",
+    "#2598A6",
+    "#7D9320",
+    "#F9838D",
+    "#C52AF5",
+    "#F849B2"
+   ],
+   "warnings_count": 0
+  },
+  {
+   "spec": {
+    "seed": "#B57EDC",
+    "n": 8,
+    "kind": "categorical",
+    "vividness": 0.5
+   },
+   "hexes": [
+    "#B57EDC",
+    "#5AC85D",
+    "#DA4C83",
+    "#F6849B",
+    "#B9771F",
+    "#389F50",
+    "#AF5BDC",
+    "#2BADB8"
+   ],
+   "warnings_count": 0
+  },
+  {
+   "spec": {
+    "seed": "#3C7AC0",
+    "n": 8,
+    "kind": "sequential",
+    "vividness": 1.0
+   },
+   "hexes": [
+    "#E6F1FF",
+    "#BADAFF",
+    "#82BBFF",
+    "#3D9AFF",
+    "#007DE6",
+    "#0064BB",
+    "#00498B",
+    "#002E5B"
+   ],
+   "warnings_count": 0
   }
  ]
 }

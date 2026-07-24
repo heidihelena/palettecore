@@ -80,6 +80,9 @@ ggplot(df, aes(x, y, colour = group)) + geom_point() +
   tritanopia-tight, expect the pale-end warning first.
 - **Categorical:** the failure zone is murky seed chroma (~0.05–0.09); steer the
   researcher to chroma ≥ 0.12 or to a deliberate near-grey anchor.
+- **If a palette reads dusty/muted:** raise `vividness` (0.0 default → 1.0) rather
+  than changing the seed — it lifts chroma only, preserves lightness/monotonicity/
+  seed anchor, and usually improves separation too. Report the new audit as always.
 - **n is the binding constraint:** one-hue sequential ramps hold 5–7 steps with
   margin, 8 is the ceiling, 9+ fails for every hue — offer binning or labels, not
   a different seed.

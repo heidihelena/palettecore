@@ -11,7 +11,8 @@ generate_palette(
   background = "#FFFFFF",
   use = "data_fill",
   thresholds = NULL,
-  anchor = "path"
+  anchor = "path",
+  vividness = 0
 )
 }
 \arguments{
@@ -28,6 +29,10 @@ generate_palette(
 \item{thresholds}{Named list overriding the default dE floors.}
 
 \item{anchor}{"path" or "exact" (categorical always contains the seed).}
+
+\item{vividness}{0.0 (default, seed-faithful) to 1.0 (chroma pushed toward
+the gamut edge). Lifts chroma only, never lightness, on every kind; the
+default reproduces earlier versions exactly.}
 }
 \value{
 List with hexes, diagnostics and warnings.

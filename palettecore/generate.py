@@ -81,10 +81,15 @@ class PaletteResult:
 # --------------------------------------------------------------- sequential
 
 
-def _sequential_path(seed_lch, n, background_rgb, samples=512):
+def _sequential_path(seed_lch, n, background_rgb, samples=512, vividness=0.0):
     """Dense OKLCH path at the seed hue, then pick n stops equally spaced in
     cumulative CIEDE2000 — arc-length reparametrisation instead of a free
-    optimiser, which makes the equal-step property hold by construction."""
+    optimiser, which makes the equal-step property hold by construction.
+
+    vividness in [0, 1] lifts each stop's chroma from the seed-scaled level
+    toward the per-stop gamut maximum (0 = seed-faithful, 1 = as vivid as
+    the gamut allows). Lightness is untouched, so monotonicity and the
+    equal-step arc-length reparametrisation are preserved at any vividness."""
     L_seed, C_seed, H_seed = (float(v) for v in seed_lch)
 
     bg_is_light = np.mean(background_rgb) > 0.5
@@ -101,7 +106,8 @@ def _sequential_path(seed_lch, n, background_rgb, samples=512):
     rgbs = np.empty((samples, 3))
     for i in range(samples):
         c_max = max_chroma(L[i], H_seed)
-        c = min(C_target[i], c_max)
+        c_base = min(C_target[i], c_max)
+        c = c_base + vividness * (c_max - c_base)
         rgbs[i] = np.clip(oklab_to_srgb(oklch_to_oklab(np.array([L[i], c, H_seed]))), 0, 1)
 
     # Cumulative perceptual arc length, then equal spacing along it.
@@ -131,9 +137,15 @@ def _min_pairwise_all_conditions(rgbs):
     return worst
 
 
-def _categorical(seed_lch, n):
+def _categorical(seed_lch, n, vividness=0.0):
     """Anchor the seed, then greedy farthest-point placement on a constrained
-    hue circle, followed by swap-improvement passes on the maximin objective."""
+    hue circle, followed by swap-improvement passes on the maximin objective.
+
+    vividness in [0, 1] lifts the candidate chroma from the seed-scaled level
+    toward the per-hue gamut ceiling (0 = seed-faithful, muted seed gives a
+    muted family; 1 = as vivid as the gamut allows). The seed swatch itself
+    keeps its own chroma, since a categorical palette always contains the
+    seed exactly."""
     L_seed, C_seed, H_seed = (float(v) for v in seed_lch)
     L_band = float(np.clip(L_seed, 0.55, 0.78))
 
@@ -142,7 +154,9 @@ def _categorical(seed_lch, n):
     candidates = []
     for h in hues:
         for L in levels:
-            c = min(max(C_seed, 0.09), max_chroma(L, h)) * 0.92
+            ceiling = 0.92 * max_chroma(L, h)
+            c_base = min(max(C_seed, 0.09), max_chroma(L, h)) * 0.92
+            c = c_base + vividness * (ceiling - c_base)
             rgb = np.clip(oklab_to_srgb(oklch_to_oklab(np.array([L, c, h]))), 0, 1)
             candidates.append(rgb)
     candidates = np.array(candidates)
@@ -189,14 +203,14 @@ def _categorical(seed_lch, n):
 # ---------------------------------------------------------------- diverging
 
 
-def _diverging(seed_lch, n, background_rgb):
+def _diverging(seed_lch, n, background_rgb, vividness=0.0):
     """Seed pole → near-neutral centre → derived opposite pole. The second
     hue (seed hue + 180°) is a design assumption, flagged in warnings."""
     L, C, H = (float(v) for v in seed_lch)
     opp = np.array([L, C, (H + 180.0) % 360.0])
     half = (n + 1) // 2
-    a = _sequential_path(np.array([L, C, H]), half, background_rgb)
-    b = _sequential_path(opp, half, background_rgb)
+    a = _sequential_path(np.array([L, C, H]), half, background_rgb, vividness=vividness)
+    b = _sequential_path(opp, half, background_rgb, vividness=vividness)
     if n % 2 == 1:
         return np.vstack([b[::-1][:-1], a])  # shared light centre stop
     return np.vstack([b[::-1][: n // 2], a[half - n // 2 :]])
@@ -314,15 +328,22 @@ def generate_palette(
     use: str = "data_fill",
     thresholds: dict | None = None,
     anchor: str = "path",
+    vividness: float = 0.0,
 ) -> PaletteResult:
     """Generate an audited palette from one seed colour.
 
-    kind:   'sequential' | 'diverging' | 'categorical'
-    use:    'data_fill' | 'text' | 'line' | 'UI'
-    anchor: 'path' (seed defines the path; exact HEX may not appear) or
-            'exact' (nearest sequential/diverging stop snapped to the seed,
-            at the cost of slightly uneven spacing). Categorical palettes
-            always contain the seed exactly, regardless of this setting.
+    kind:      'sequential' | 'diverging' | 'categorical'
+    use:       'data_fill' | 'text' | 'line' | 'UI'
+    anchor:    'path' (seed defines the path; exact HEX may not appear) or
+               'exact' (nearest sequential/diverging stop snapped to the seed,
+               at the cost of slightly uneven spacing). Categorical palettes
+               always contain the seed exactly, regardless of this setting.
+    vividness: 0.0 (default, seed-faithful — a muted seed gives a muted
+               family) to 1.0 (chroma pushed toward the gamut edge). Applies
+               to every kind: it lifts chroma only, never lightness, so
+               sequential monotonicity, equal-step spacing, and the exact
+               seed anchor are all preserved. The default reproduces earlier
+               versions byte-for-byte.
 
     Every diagnostic is computed on the 8-bit quantised colours that are
     actually returned as HEX, never on internal floating-point values, so
@@ -336,6 +357,8 @@ def generate_palette(
         raise ValueError(
             f"Unknown use: {use!r} (expected 'data_fill', 'text', 'line' or 'UI')"
         )
+    if not isinstance(vividness, (int, float)) or not np.isfinite(vividness) or not 0.0 <= vividness <= 1.0:
+        raise ValueError(f"vividness must be a number in [0, 1], got {vividness!r}")
     if not isinstance(n, int) or not 2 <= n <= 24:
         raise ValueError(f"n must be an integer between 2 and 24, got {n!r}")
     if kind == "diverging" and n < 3:
@@ -352,12 +375,13 @@ def generate_palette(
     seed_lch = hex_to_oklch(seed)
     background_rgb = hex_to_srgb(background)
 
+    vividness = float(vividness)
     if kind == "sequential":
-        rgbs = _sequential_path(seed_lch, n, background_rgb)
+        rgbs = _sequential_path(seed_lch, n, background_rgb, vividness=vividness)
     elif kind == "diverging":
-        rgbs = _diverging(seed_lch, n, background_rgb)
+        rgbs = _diverging(seed_lch, n, background_rgb, vividness=vividness)
     else:
-        rgbs = _categorical(seed_lch, n)
+        rgbs = _categorical(seed_lch, n, vividness=vividness)
 
     seed_rgb = hex_to_srgb(seed)
     if kind in ("sequential", "diverging") and anchor == "exact":
@@ -370,6 +394,7 @@ def generate_palette(
     rgbs = np.array([hex_to_srgb(h) for h in hexes])
 
     diag, warnings = _audit(rgbs, kind, background_rgb, use, thresholds)
+    diag["vividness"] = vividness
     diag["anchor"] = anchor if kind != "categorical" else "exact"
     diag["seed_nearest_stop_deltaE"] = round(
         min(ciede2000(c, seed_rgb) for c in rgbs), 1

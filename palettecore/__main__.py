@@ -30,6 +30,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--anchor", choices=["path", "exact"], default="path")
     p.add_argument(
+        "--vividness", type=float, default=0.0,
+        help="0.0 seed-faithful (default) to 1.0 chroma pushed to the gamut edge",
+    )
+    p.add_argument(
         "--format", choices=["text", "json", "css"], default="text", dest="fmt"
     )
     args = p.parse_args(argv)
@@ -42,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
             background=args.background,
             use=args.use,
             anchor=args.anchor,
+            vividness=args.vividness,
         )
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)

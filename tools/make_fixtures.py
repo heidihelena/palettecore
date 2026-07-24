@@ -34,6 +34,9 @@ PALETTES = [
     {"seed": "#FFFF00", "n": 6, "kind": "sequential"},
     {"seed": "#808080", "n": 4, "kind": "sequential"},
     {"seed": "#8B6FC9", "n": 6, "kind": "sequential", "background": "#000000"},
+    {"seed": "#B57EDC", "n": 8, "kind": "categorical", "vividness": 1.0},
+    {"seed": "#B57EDC", "n": 8, "kind": "categorical", "vividness": 0.5},
+    {"seed": "#3C7AC0", "n": 8, "kind": "sequential", "vividness": 1.0},
 ]
 
 

@@ -10,7 +10,7 @@ DEFAULT_THRESHOLDS <- list(
   tritanopia = 6.0
 )
 
-.sequential_path <- function(seed_lch, n, background_rgb, samples = 512L) {
+.sequential_path <- function(seed_lch, n, background_rgb, samples = 512L, vividness = 0.0) {
   C_seed <- seed_lch[2]
   H_seed <- seed_lch[3]
 
@@ -29,7 +29,8 @@ DEFAULT_THRESHOLDS <- list(
   rgbs <- matrix(0, nrow = samples, ncol = 3)
   for (i in seq_len(samples)) {
     c_max <- max_chroma(L[i], H_seed)
-    cc <- min(C_target[i], c_max)
+    c_base <- min(C_target[i], c_max)
+    cc <- c_base + vividness * (c_max - c_base)
     rgbs[i, ] <- .clip01(oklab_to_srgb(oklch_to_oklab(c(L[i], cc, H_seed))))
   }
 
@@ -42,7 +43,7 @@ DEFAULT_THRESHOLDS <- list(
   rgbs[idx, , drop = FALSE]
 }
 
-.categorical <- function(seed_lch, n) {
+.categorical <- function(seed_lch, n, vividness = 0.0) {
   L_seed <- seed_lch[1]; C_seed <- seed_lch[2]; H_seed <- seed_lch[3]
   L_band <- min(max(L_seed, 0.55), 0.78)
 
@@ -52,7 +53,9 @@ DEFAULT_THRESHOLDS <- list(
   k <- 0L
   for (h in hues) {
     for (L in levels) {
-      cc <- min(max(C_seed, 0.09), max_chroma(L, h)) * 0.92
+      ceiling <- 0.92 * max_chroma(L, h)
+      c_base <- min(max(C_seed, 0.09), max_chroma(L, h)) * 0.92
+      cc <- c_base + vividness * (ceiling - c_base)
       k <- k + 1L
       cand_list[[k]] <- .clip01(oklab_to_srgb(oklch_to_oklab(c(L, cc, h))))
     }
@@ -107,12 +110,12 @@ DEFAULT_THRESHOLDS <- list(
   do.call(rbind, lapply(chosen, function(p) p$rgb))
 }
 
-.diverging <- function(seed_lch, n, background_rgb) {
+.diverging <- function(seed_lch, n, background_rgb, vividness = 0.0) {
   L <- seed_lch[1]; C <- seed_lch[2]; H <- seed_lch[3]
   opp <- c(L, C, (H + 180) %% 360)
   half <- (n + 1L) %/% 2L
-  a <- .sequential_path(seed_lch, half, background_rgb)
-  b <- .sequential_path(opp, half, background_rgb)
+  a <- .sequential_path(seed_lch, half, background_rgb, vividness = vividness)
+  b <- .sequential_path(opp, half, background_rgb, vividness = vividness)
   rev_b <- b[half:1, , drop = FALSE]
   if (n %% 2L == 1L) {
     rbind(rev_b[1:(half - 1), , drop = FALSE], a)
@@ -252,6 +255,9 @@ DEFAULT_THRESHOLDS <- list(
 #' @param use "data_fill", "text", "line" or "UI".
 #' @param thresholds Named list overriding the default dE floors.
 #' @param anchor "path" or "exact" (categorical always contains the seed).
+#' @param vividness 0.0 (default, seed-faithful) to 1.0 (chroma pushed toward
+#'   the gamut edge). Lifts chroma only, never lightness, on every kind; the
+#'   default reproduces earlier versions exactly.
 #' @return List with hexes, diagnostics and warnings.
 #' @importFrom utils modifyList
 #' @importFrom stats setNames
@@ -262,7 +268,7 @@ DEFAULT_THRESHOLDS <- list(
 #' @export
 generate_palette <- function(seed, n = 8L, kind = "sequential",
                              background = "#FFFFFF", use = "data_fill",
-                             thresholds = NULL, anchor = "path") {
+                             thresholds = NULL, anchor = "path", vividness = 0.0) {
   if (!kind %in% c("sequential", "diverging", "categorical")) {
     stop(sprintf("Unknown palette kind: '%s'", kind))
   }
@@ -272,6 +278,11 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   if (!use %in% c("data_fill", "text", "line", "UI")) {
     stop(sprintf("Unknown use: '%s' (expected 'data_fill', 'text', 'line' or 'UI')", use))
   }
+  if (!is.numeric(vividness) || length(vividness) != 1 || !is.finite(vividness) ||
+      vividness < 0 || vividness > 1) {
+    stop("vividness must be a number in [0, 1]")
+  }
+  vividness <- as.numeric(vividness)
   if (length(n) != 1 || is.na(n) || n != as.integer(n) || n < 2 || n > 24) {
     stop(sprintf("n must be an integer between 2 and 24, got %s", n))
   }
@@ -294,9 +305,9 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   background_rgb <- hex_to_srgb(background)
 
   rgbs <- switch(kind,
-    sequential = .sequential_path(seed_lch, n, background_rgb),
-    diverging = .diverging(seed_lch, n, background_rgb),
-    categorical = .categorical(seed_lch, n)
+    sequential = .sequential_path(seed_lch, n, background_rgb, vividness = vividness),
+    diverging = .diverging(seed_lch, n, background_rgb, vividness = vividness),
+    categorical = .categorical(seed_lch, n, vividness = vividness)
   )
 
   seed_rgb <- hex_to_srgb(seed)
@@ -313,6 +324,7 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   audit <- .audit(rgbs, kind, background_rgb, use, th)
   diag <- audit$diagnostics
   warnings <- audit$warnings
+  diag$vividness <- vividness
   diag$anchor <- if (kind == "categorical") "exact" else anchor
   diag$seed_nearest_stop_deltaE <- round(min(apply(rgbs, 1, ciede2000, rgb2 = seed_rgb)), 1)
 

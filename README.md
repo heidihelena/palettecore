@@ -89,6 +89,18 @@ Some seeds start inside a known failure zone; the map is in
 Region guidance never replaces the per-palette audit; the diagnostics that
 ship with your palette are the numbers that bind.
 
+**Vividness.** A muted seed gives a muted family (the default is
+seed-faithful). If a palette reads too dusty, raise `vividness` from `0.0`
+toward `1.0` — it lifts chroma toward the gamut edge without touching
+lightness, so sequential monotonicity, equal-step spacing and the exact seed
+anchor are all preserved, and the default reproduces earlier versions
+exactly. More chroma also tends to *improve* separation, so vivid and
+accessible are usually allies, not opposites.
+
+```python
+generate_palette("#B57EDC", n=8, kind="categorical", vividness=0.6)
+```
+
 ## How it works
 
 All work happens in **OKLCH** (path construction, gamut clamping) with

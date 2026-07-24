@@ -86,3 +86,51 @@ Making semitones CVD-safe would need a steeper lightness climb per step, which
 spends the lightness range faster and shrinks the usable span below 3-4
 octaves. Height-safe-for-all and semitone-safe-for-all cannot both hold across
 a useful range: a genuine pass / fail / not-resolvable result, not a clean win.
+
+## pitch_color_frontier.py — where does it become semitone-safe for everyone?
+
+Two sweeps, both reported as MINIMUM adjacent dE and count below the dE 6 floor
+(never the mean), asking when adjacent semitones clear the floor for CVD viewers.
+
+```
+PYTHONPATH=.:experiments python3 experiments/pitch_color_frontier.py
+PYTHONPATH=.:experiments python3 experiments/render_frontier.py
+```
+
+### A. Range sweep (12 classes/octave) — this lever does not reach
+
+| octaves | dL/step | normal min | worst-CVD min | semitone-safe (all CVD)? |
+|---|---|---|---|---|
+| 1 | 0.052 | 8.5 | 3.5 | no |
+| 2 | 0.026 | 7.3 | 1.5 | no |
+| 3 | 0.017 | 6.6 | 0.9 | no |
+| 4 | 0.013 | 6.3 | 0.5 | no |
+| 6 | 0.009 | 6.1 | 0.2 | no |
+
+Even compressed to a single octave (steepest possible lightness climb), the
+full chromatic scale reaches only 3.5 dE under CVD. Range compression never
+crosses the floor. (Normal vision also drifts toward its own limit, 6.1, at 6
+octaves, as hues pack tighter and chroma pinches.)
+
+### B. Resolution sweep (fixed 3 octaves) — this lever does
+
+| classes/octave | normal min | worst-CVD min | semitone-safe (all CVD)? |
+|---|---|---|---|
+| 12 | 6.6 | 0.9 | no |
+| 7 | 11.6 | 1.1 | no |
+| 6 | 13.7 | 2.2 | no |
+| 5 (pentatonic) | 16.8 | 4.0 | no (5 steps under) |
+| 4 | 22.9 | 6.1 | **YES** |
+| 3 | 30.2 | 7.2 | **YES** |
+
+### Conclusion
+
+The binding constraint on CVD semitone-safety is the number of **hues**, not
+the pitch range. You cannot rescue the 12-tone chromatic scale for CVD viewers
+by shrinking its range; you rescue it only by using <=4 pitch classes per
+octave. Pentatonic (5) comes close (worst-CVD 4.0) and may suit a practical
+enhancer, but strictly clears the floor only at 4/octave over 3 octaves.
+
+This mirrors the palette result: normal vision tolerates more categories than
+a CVD viewer. Here, with lightness already spent on pitch height, the CVD
+budget for pitch class is about four distinct hues.

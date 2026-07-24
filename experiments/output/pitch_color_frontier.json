@@ -1,0 +1,298 @@
+{
+  "floor": 6.0,
+  "range_sweep": {
+    "1": {
+      "dL_per_step": 0.0517,
+      "stats": {
+        "normal": {
+          "min": 8.5,
+          "below_floor": 0,
+          "steps": 12
+        },
+        "protanopia": {
+          "min": 3.5,
+          "below_floor": 2,
+          "steps": 12
+        },
+        "deuteranopia": {
+          "min": 5.2,
+          "below_floor": 2,
+          "steps": 12
+        },
+        "tritanopia": {
+          "min": 4.5,
+          "below_floor": 5,
+          "steps": 12
+        }
+      },
+      "cvd_min": 3.5,
+      "semitone_safe_all_cvd": false
+    },
+    "2": {
+      "dL_per_step": 0.0258,
+      "stats": {
+        "normal": {
+          "min": 7.3,
+          "below_floor": 0,
+          "steps": 24
+        },
+        "protanopia": {
+          "min": 1.5,
+          "below_floor": 11,
+          "steps": 24
+        },
+        "deuteranopia": {
+          "min": 2.3,
+          "below_floor": 12,
+          "steps": 24
+        },
+        "tritanopia": {
+          "min": 2.4,
+          "below_floor": 11,
+          "steps": 24
+        }
+      },
+      "cvd_min": 1.5,
+      "semitone_safe_all_cvd": false
+    },
+    "3": {
+      "dL_per_step": 0.0172,
+      "stats": {
+        "normal": {
+          "min": 6.6,
+          "below_floor": 0,
+          "steps": 36
+        },
+        "protanopia": {
+          "min": 0.9,
+          "below_floor": 18,
+          "steps": 36
+        },
+        "deuteranopia": {
+          "min": 1.5,
+          "below_floor": 17,
+          "steps": 36
+        },
+        "tritanopia": {
+          "min": 1.9,
+          "below_floor": 17,
+          "steps": 36
+        }
+      },
+      "cvd_min": 0.9,
+      "semitone_safe_all_cvd": false
+    },
+    "4": {
+      "dL_per_step": 0.0129,
+      "stats": {
+        "normal": {
+          "min": 6.3,
+          "below_floor": 0,
+          "steps": 48
+        },
+        "protanopia": {
+          "min": 0.5,
+          "below_floor": 24,
+          "steps": 48
+        },
+        "deuteranopia": {
+          "min": 1.2,
+          "below_floor": 26,
+          "steps": 48
+        },
+        "tritanopia": {
+          "min": 1.7,
+          "below_floor": 23,
+          "steps": 48
+        }
+      },
+      "cvd_min": 0.5,
+      "semitone_safe_all_cvd": false
+    },
+    "6": {
+      "dL_per_step": 0.0086,
+      "stats": {
+        "normal": {
+          "min": 6.1,
+          "below_floor": 0,
+          "steps": 72
+        },
+        "protanopia": {
+          "min": 0.2,
+          "below_floor": 36,
+          "steps": 72
+        },
+        "deuteranopia": {
+          "min": 0.9,
+          "below_floor": 38,
+          "steps": 72
+        },
+        "tritanopia": {
+          "min": 1.6,
+          "below_floor": 35,
+          "steps": 72
+        }
+      },
+      "cvd_min": 0.2,
+      "semitone_safe_all_cvd": false
+    }
+  },
+  "resolution_sweep": {
+    "12": {
+      "stats": {
+        "normal": {
+          "min": 6.6,
+          "below_floor": 0,
+          "steps": 36
+        },
+        "protanopia": {
+          "min": 0.9,
+          "below_floor": 18,
+          "steps": 36
+        },
+        "deuteranopia": {
+          "min": 1.5,
+          "below_floor": 17,
+          "steps": 36
+        },
+        "tritanopia": {
+          "min": 1.9,
+          "below_floor": 17,
+          "steps": 36
+        }
+      },
+      "cvd_min": 0.9,
+      "semitone_safe_all_cvd": false
+    },
+    "7": {
+      "stats": {
+        "normal": {
+          "min": 11.6,
+          "below_floor": 0,
+          "steps": 21
+        },
+        "protanopia": {
+          "min": 1.1,
+          "below_floor": 4,
+          "steps": 21
+        },
+        "deuteranopia": {
+          "min": 3.1,
+          "below_floor": 7,
+          "steps": 21
+        },
+        "tritanopia": {
+          "min": 3.6,
+          "below_floor": 5,
+          "steps": 21
+        }
+      },
+      "cvd_min": 1.1,
+      "semitone_safe_all_cvd": false
+    },
+    "6": {
+      "stats": {
+        "normal": {
+          "min": 13.7,
+          "below_floor": 0,
+          "steps": 18
+        },
+        "protanopia": {
+          "min": 2.2,
+          "below_floor": 2,
+          "steps": 18
+        },
+        "deuteranopia": {
+          "min": 2.9,
+          "below_floor": 6,
+          "steps": 18
+        },
+        "tritanopia": {
+          "min": 3.8,
+          "below_floor": 6,
+          "steps": 18
+        }
+      },
+      "cvd_min": 2.2,
+      "semitone_safe_all_cvd": false
+    },
+    "5": {
+      "stats": {
+        "normal": {
+          "min": 16.8,
+          "below_floor": 0,
+          "steps": 15
+        },
+        "protanopia": {
+          "min": 5.7,
+          "below_floor": 1,
+          "steps": 15
+        },
+        "deuteranopia": {
+          "min": 4.0,
+          "below_floor": 3,
+          "steps": 15
+        },
+        "tritanopia": {
+          "min": 4.3,
+          "below_floor": 1,
+          "steps": 15
+        }
+      },
+      "cvd_min": 4.0,
+      "semitone_safe_all_cvd": false
+    },
+    "4": {
+      "stats": {
+        "normal": {
+          "min": 22.9,
+          "below_floor": 0,
+          "steps": 12
+        },
+        "protanopia": {
+          "min": 11.4,
+          "below_floor": 0,
+          "steps": 12
+        },
+        "deuteranopia": {
+          "min": 13.6,
+          "below_floor": 0,
+          "steps": 12
+        },
+        "tritanopia": {
+          "min": 6.1,
+          "below_floor": 0,
+          "steps": 12
+        }
+      },
+      "cvd_min": 6.1,
+      "semitone_safe_all_cvd": true
+    },
+    "3": {
+      "stats": {
+        "normal": {
+          "min": 30.2,
+          "below_floor": 0,
+          "steps": 9
+        },
+        "protanopia": {
+          "min": 7.2,
+          "below_floor": 0,
+          "steps": 9
+        },
+        "deuteranopia": {
+          "min": 14.9,
+          "below_floor": 0,
+          "steps": 9
+        },
+        "tritanopia": {
+          "min": 15.0,
+          "below_floor": 0,
+          "steps": 9
+        }
+      },
+      "cvd_min": 7.2,
+      "semitone_safe_all_cvd": true
+    }
+  }
+}

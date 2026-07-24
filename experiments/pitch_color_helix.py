@@ -63,14 +63,25 @@ def main():
     hx = helix()
     rgbs = [hex_to_srgb(p["hex"]) for p in hx]
 
-    # Adjacent semitone steps (melodic neighbours) under each vision.
+    # Adjacent semitone steps (melodic neighbours): the FULL per-interval
+    # vector under each vision, so min (not just mean) drives the claim.
     adj = {}
     for cond in (None, *CONDITIONS):
         key = cond or "normal"
-        adj[key] = round(float(np.mean(
-            [ciede2000(simulate_cvd(rgbs[i], cond) if cond else rgbs[i],
-                       simulate_cvd(rgbs[i + 1], cond) if cond else rgbs[i + 1])
-             for i in range(len(rgbs) - 1)])), 1)
+        vec = [ciede2000(simulate_cvd(rgbs[i], cond) if cond else rgbs[i],
+                         simulate_cvd(rgbs[i + 1], cond) if cond else rgbs[i + 1])
+               for i in range(len(rgbs) - 1)]
+        i_worst = int(np.argmin(vec))
+        adj[key] = {
+            "min": round(float(np.min(vec)), 1),
+            "mean": round(float(np.mean(vec)), 1),
+            "max": round(float(np.max(vec)), 1),
+            "spread": round(float(np.max(vec) - np.min(vec)), 1),
+            "cv": round(float(np.std(vec) / np.mean(vec)), 2),
+            "worst_interval": f"{hx[i_worst]['note']}->{hx[i_worst + 1]['note']}",
+            "worst_value": round(float(np.min(vec)), 1),
+            "n_below_6": int(np.sum(np.array(vec) < 6.0)),
+        }
 
     # Octave neighbours (n, n+12): the CVD-safe separation lightness buys.
     octpairs = {}
@@ -81,21 +92,27 @@ def main():
                 for i in range(len(rgbs) - 12)]
         octpairs[key] = round(float(np.min(vals)), 1)
 
-    mapping = {"model": "pitch helix: angle=pitch class (ΔE-spaced hues), height=lightness=absolute pitch",
+    mapping = {"model": "gamut-constrained perceptual pitch helix: angle=pitch class "
+                        "(ΔE-spaced hues), height=lightness=absolute pitch; chroma = "
+                        "per-lightness safe value (narrows near L extremes)",
                "notes": hx,
-               "mean_adjacent_semitone_deltaE": adj,
+               "adjacent_semitone_deltaE": adj,
                "min_octave_pair_deltaE": octpairs}
     (OUT / "pitch_color_helix.json").write_text(json.dumps(mapping, indent=2))
 
-    print("Pitch helix (C3..C6), height = lightness = absolute pitch\n")
+    print("Gamut-constrained perceptual pitch helix (C3..C6)\n")
     print(f"  {'note':5s} {'f(Hz)':>8s}  {'L':>5s}  {'hue':>5s}  hex")
     for p in hx:
         if p["pc"] == "C" or p["n"] in (hx[0]["n"], hx[-1]["n"]):
-            print(f"  {p['note']:5s} {p['f']:8.2f}  {p['L']:.3f}  {p['hue']:5.1f}  {p['hex']}   <- C, octave marker")
-    print(f"\nMean ADJACENT semitone ΔE (melodic neighbours), by vision:\n  {adj}")
-    print(f"Min OCTAVE-pair ΔE (n vs n+12), by vision:\n  {octpairs}")
-    print("\nReading: adjacent semitones still lean on hue (CVD-weak), but any octave move is\n"
-          "CVD-safe via lightness — so the helix carries pitch height to every viewer.")
+            print(f"  {p['note']:5s} {p['f']:8.2f}  {p['L']:.3f}  {p['hue']:5.1f}  {p['hex']}   <- C")
+    print("\nADJACENT semitone ΔE (melodic neighbours), full vector by vision:")
+    print(f"  {'vision':13s} {'min':>5s} {'mean':>5s} {'max':>5s} {'spread':>7s} {'<6':>4s}  worst")
+    for k, s in adj.items():
+        print(f"  {k:13s} {s['min']:5.1f} {s['mean']:5.1f} {s['max']:5.1f} {s['spread']:7.1f} "
+              f"{s['n_below_6']:4d}  {s['worst_interval']} ({s['worst_value']})")
+    print(f"\nMin OCTAVE-pair ΔE (n vs n+12), by vision:\n  {octpairs}")
+    print("\nReading: the claim to report is the MINIMUM adjacent ΔE per condition, and how\n"
+          "many steps fall below the threshold — not the mean.")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
-  "model": "pitch helix: angle=pitch class (\u0394E-spaced hues), height=lightness=absolute pitch",
+  "model": "gamut-constrained perceptual pitch helix: angle=pitch class (\u0394E-spaced hues), height=lightness=absolute pitch; chroma = per-lightness safe value (narrows near L extremes)",
   "notes": [
     {
       "n": -12,
@@ -335,11 +335,47 @@
       "hex": "#FADBE3"
     }
   ],
-  "mean_adjacent_semitone_deltaE": {
-    "normal": 11.0,
-    "protanopia": 7.1,
-    "deuteranopia": 6.9,
-    "tritanopia": 9.2
+  "adjacent_semitone_deltaE": {
+    "normal": {
+      "min": 6.5,
+      "mean": 11.0,
+      "max": 13.8,
+      "spread": 7.2,
+      "cv": 0.16,
+      "worst_interval": "B5->C6",
+      "worst_value": 6.5,
+      "n_below_6": 0
+    },
+    "protanopia": {
+      "min": 0.7,
+      "mean": 7.1,
+      "max": 18.4,
+      "spread": 17.7,
+      "cv": 0.58,
+      "worst_interval": "A5->A#5",
+      "worst_value": 0.7,
+      "n_below_6": 17
+    },
+    "deuteranopia": {
+      "min": 1.6,
+      "mean": 6.9,
+      "max": 18.8,
+      "spread": 17.1,
+      "cv": 0.64,
+      "worst_interval": "D#3->E3",
+      "worst_value": 1.6,
+      "n_below_6": 16
+    },
+    "tritanopia": {
+      "min": 1.9,
+      "mean": 9.2,
+      "max": 28.8,
+      "spread": 26.9,
+      "cv": 0.79,
+      "worst_interval": "C#3->D3",
+      "worst_value": 1.9,
+      "n_below_6": 17
+    }
   },
   "min_octave_pair_deltaE": {
     "normal": 17.9,

@@ -35,12 +35,12 @@ the human claims (does colour improve pitch ordering, interval discrimination,
 melody memory, or help under hearing loss). Those need a listening study; this
 is the defensible stimulus generator that would feed one.
 
-## pitch_color_helix.py — the helix correction (recommended model)
+## pitch_color_helix.py — the helix correction (recommended art model)
 
-Pitch is a **helix**, not stacked circles: angle = pitch class, height =
-lightness = absolute pitch. Because lightness rises monotonically with pitch
-and lightness is the CVD-safe channel, this model is distinguishable for every
-viewer, not just normal vision.
+Model pitch as a **helix**, not stacked circles: angle = pitch class, height =
+designed lightness = absolute pitch. The returned colours are still audited:
+hue-dependent luminance can reverse locally after a CVD simulation, so a
+monotonic OKLab construction is not automatically monotonic for every viewer.
 
 ```
 PYTHONPATH=.:experiments python3 experiments/pitch_color_helix.py
@@ -61,6 +61,11 @@ steps of 36 below the dE 6 floor):
 
 Octave-pair minimum: 15.9-17.9 across all conditions.
 
+Luminance order is increasing for normal vision, deuteranopia and tritanopia
+in this run. The protanopia simulation has four small local reversals (worst
+relative-luminance step about -0.0125). That rules out a blanket claim that
+colour alone carries fine melodic contour to every viewer.
+
 Honest reading (an earlier draft wrongly claimed every step clears 6 from the
 *mean*; the minimum disproves it):
 
@@ -70,10 +75,11 @@ Honest reading (an earlier draft wrongly claimed every step clears 6 from the
   because the per-semitone lightness step (~0.017 L, ~1.5-2 dE) cannot lift a
   hue that has collapsed onto the dichromat axis. The colour does NOT convey
   fine semitone identity to a CVD viewer.
-- **What DOES survive CVD:** pitch *height* and *octave*. Lightness is
-  monotonic with pitch and octave pairs stay >=15.9 dE, so a CVD viewer reliably
-  reads higher-vs-lower, register and melodic contour — just not which of two
-  neighbouring semitones. That is the scoped, true enhancer claim.
+- **What DOES remain strong in the simulations:** octave and broad register.
+  Octave pairs stay >=15.9 dE. Local higher-vs-lower order is not guaranteed:
+  protanopia has four small luminance reversals and many adjacent colours fall
+  below the design floor. Position, motion, labels, and sound remain the
+  binding encodings; colour is an enhancer.
 
 **Two structural limits, both real:**
 1. Lightness is finite, so the helix spends the displayable range over ~3-4
@@ -82,15 +88,18 @@ Honest reading (an earlier draft wrongly claimed every step clears 6 from the
    chroma pinches near L 0.32 and 0.92, so hue steps carry less dE at the
    extremes (visible as normal vision's tightest step, 6.5, at the pale top).
 
-Making semitones CVD-safe would need a steeper lightness climb per step, which
-spends the lightness range faster and shrinks the usable span below 3-4
-octaves. Height-safe-for-all and semitone-safe-for-all cannot both hold across
-a useful range: a genuine pass / fail / not-resolvable result, not a clean win.
+Increasing adjacent simulated-CVD separation would need a steeper lightness
+climb per step, which spends the lightness range faster and shrinks the usable
+span below 3-4 octaves. Broad register separation and fine semitone separation
+cannot both clear the chosen floor across a useful range: a genuine trade-off,
+not a clean win.
 
-## pitch_color_frontier.py — where does it become semitone-safe for everyone?
+## pitch_color_frontier.py — where does it clear the exploratory design floor?
 
 Two sweeps, both reported as MINIMUM adjacent dE and count below the dE 6 floor
-(never the mean), asking when adjacent semitones clear the floor for CVD viewers.
+(never the mean), asking when adjacent steps clear the package's floor in all
+three CVD simulations. ΔE 6 is a configurable package design rule, not a
+human-validated accessibility cutoff or a guarantee of safety.
 
 ```
 PYTHONPATH=.:experiments python3 experiments/pitch_color_frontier.py
@@ -99,7 +108,7 @@ PYTHONPATH=.:experiments python3 experiments/render_frontier.py
 
 ### A. Range sweep (12 classes/octave) — this lever does not reach
 
-| octaves | dL/step | normal min | worst-CVD min | semitone-safe (all CVD)? |
+| octaves | dL/step | normal min | worst-CVD min | clears floor (all CVD)? |
 |---|---|---|---|---|
 | 1 | 0.052 | 8.5 | 3.5 | no |
 | 2 | 0.026 | 7.3 | 1.5 | no |
@@ -114,7 +123,7 @@ octaves, as hues pack tighter and chroma pinches.)
 
 ### B. Resolution sweep (fixed 3 octaves) — this lever does
 
-| classes/octave | normal min | worst-CVD min | semitone-safe (all CVD)? |
+| classes/octave | normal min | worst-CVD min | clears floor (all CVD)? |
 |---|---|---|---|
 | 12 | 6.6 | 0.9 | no |
 | 7 | 11.6 | 1.1 | no |
@@ -125,12 +134,11 @@ octaves, as hues pack tighter and chroma pinches.)
 
 ### Conclusion
 
-The binding constraint on CVD semitone-safety is the number of **hues**, not
-the pitch range. You cannot rescue the 12-tone chromatic scale for CVD viewers
-by shrinking its range; you rescue it only by using <=4 pitch classes per
-octave. Pentatonic (5) comes close (worst-CVD 4.0) and may suit a practical
-enhancer, but strictly clears the floor only at 4/octave over 3 octaves.
+Within this model, the binding constraint is the number of **hues**, not the
+pitch range. Shrinking the range does not make the 12-tone chromatic mapping
+clear the simulated-CVD design floor; reducing to <=4 classes per octave does
+for this tested span. Pentatonic (5) comes close (worst-CVD 4.0).
 
 This mirrors the palette result: normal vision tolerates more categories than
 a CVD viewer. Here, with lightness already spent on pitch height, the CVD
-budget for pitch class is about four distinct hues.
+budget for pitch class is about four distinct hues under the package defaults.

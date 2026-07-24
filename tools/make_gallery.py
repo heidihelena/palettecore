@@ -1,9 +1,8 @@
 """Render docs/example_palettes.png — the four example palettes for the README.
 
-Rows 1-3 are the core palette kinds; row 4 is a cubehelix-style run (a slice of
-the pitch helix from experiments/), shown to make the point that a helix through
-OKLCH is a legitimate lightness-monotonic sequential palette. Every row is
-labelled with its audited minimum, never a mean.
+Rows 1-3 are the original palette kinds; row 4 is a cubehelix-inspired OKLCH
+run. Every row is labelled with the returned palette's audited normal and
+worst simulated-CVD minimum, never a mean.
 """
 
 import pathlib
@@ -22,18 +21,27 @@ DOCS = pathlib.Path(__file__).resolve().parent.parent / "docs"
 def main():
     DOCS.mkdir(exist_ok=True)
     rows = [
-        ("Sequential", "one hue, even ΔE steps, monotone lightness (min ΔE 9.6)",
-         generate_palette("#3C7AC0", n=8, kind="sequential").hexes),
-        ("Diverging", "two poles, light neutral centre (min ΔE 17.4)",
-         generate_palette("#B84A3C", n=9, kind="diverging").hexes),
-        ("Categorical", "unordered groups, CVD-audited, vivid=0.6 (min ΔE 9.8)",
-         generate_palette("#B57EDC", n=8, kind="categorical", vividness=0.6).hexes),
-        ("Helix (cubehelix)", "lightness climbs, hue rotates — a sequential scale that stays ordered in greyscale",
-         generate_palette("#B84A3C", n=8, kind="helix", rotations=1.4, vividness=0.4).hexes),
+        ("Sequential", "one hue, even ΔE steps, monotone luminance",
+         generate_palette("#3C7AC0", n=8, kind="sequential")),
+        ("Diverging", "two poles, light neutral centre",
+         generate_palette("#B84A3C", n=9, kind="diverging")),
+        ("Categorical", "unordered groups, CVD-audited, vividness=0.6",
+         generate_palette("#B57EDC", n=8, kind="categorical", vividness=0.6)),
+        ("Helix (cubehelix-inspired)", "designed lightness climbs while hue rotates",
+         generate_palette("#B84A3C", n=8, kind="helix", rotations=1.4, vividness=0.4)),
     ]
 
     fig, axes = plt.subplots(len(rows), 1, figsize=(9, 5.2))
-    for ax, (title, sub, hexes) in zip(axes, rows):
+    for ax, (title, description, result) in zip(axes, rows):
+        hexes = result.hexes
+        minima = (
+            result.diagnostics.get("min_adjacent_deltaE")
+            or result.diagnostics["min_pairwise_deltaE"]
+        )
+        sub = (
+            f"{description} — normal min ΔE {minima['normal']:.1f}; "
+            f"worst simulated-CVD min {min(minima[c] for c in minima if c != 'normal'):.1f}"
+        )
         for i, h in enumerate(hexes):
             ax.add_patch(plt.Rectangle((i, 0), 1, 1, color=h))
         ax.set_xlim(0, len(hexes))

@@ -21,12 +21,13 @@ never verify, prove, guarantee, or "WCAG compliant" as a blanket claim.
 
 ## Invariants (hard constraints)
 1. **Kind follows the data's meaning, not aesthetics.** Ordered magnitude → `sequential`
-   (single hue) or `helix` (cubehelix: lightness climbs while hue rotates, a multi-hue
-   ordered scale that stays greyscale- and CVD-safe via lightness). Meaningful centre
+   (single hue) or `helix` (cubehelix-inspired: designed lightness climbs while hue
+   rotates). A helix is not automatically CVD-safe: read `cvd_luminance_monotonic`
+   and the adjacent-distance warnings for the returned colours. Meaningful centre
    (zero, baseline) → `diverging`. Unordered groups → `categorical` (monotonic lightness
    would falsely imply order). Ask if unclear. `helix` is also the robust pick when the
-   seed is weak or arbitrary — its hue sweeps regardless of where it starts, so seed choice
-   barely matters (tune with `rotations`, default 1.0).
+   seed is weak or arbitrary — its hue sweeps regardless of where it starts, though seed
+   choice still affects start hue and baseline chroma (tune with `rotations`, default 1.0).
 2. **Declare the use and background.** A colour that works as an area fill fails as text; the
    audit is only meaningful for the declared `background` and `use` (`data_fill` / `text` /
    `line` / `UI`).
@@ -42,7 +43,7 @@ never verify, prove, guarantee, or "WCAG compliant" as a blanket claim.
    constraint at once — the honest output is the warning, not a different number.
 6. **Determinism is a feature.** Same inputs, same palette, both languages. If a researcher
    needs to reproduce a palette, record the call (seed, n, kind, background, use, anchor,
-   thresholds), not the hex list alone.
+   thresholds, vividness, rotations), not the hex list alone.
 
 ## Running it
 

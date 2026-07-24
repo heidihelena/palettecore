@@ -14,14 +14,15 @@ and a generator that returns bare HEX codes is hiding the second one.
 Grounded in Crameri, Shephard & Heron (2020), *The misuse of colour in science
 communication*, Nature Communications 11:5444.
 
-![Example palettes: sequential, diverging, categorical, and a cubehelix-style
+![Example palettes: sequential, diverging, categorical, and a cubehelix-inspired
 run, each audited](docs/example_palettes.png)
 
 Four palettes from one seed each, every one carrying its audit
 (`tools/make_gallery.py` regenerates this). The bottom row is a **helix**
-through OKLCH — lightness climbs while hue rotates — a sequential scale that
-stays ordered even in greyscale. It came out of a small cross-modal art
-experiment (see *Does music have a colour?* below).
+through OKLCH — designed lightness climbs while hue rotates — a multi-hue
+sequential scale whose returned colours are checked for greyscale and
+simulated-CVD order. It came out of a small cross-modal art experiment
+(see *Does music have a colour?* below).
 
 Free and open source, Apache-2.0. Python core now; R package with
 `scale_colour_accessible()` / `scale_fill_accessible()` in `r/`, checked
@@ -128,12 +129,14 @@ All work happens in **OKLCH** (path construction, gamut clamping) with
 - **Diverging** — two sequential halves meeting at a near-neutral light
   centre. The second pole (seed hue + 180°) is a design assumption and is
   flagged as such in the warnings.
-- **Helix** — a cubehelix (Green 2011) through OKLCH: lightness steps evenly
-  while hue rotates `rotations` full turns from the seed. Monotonic in
-  lightness by construction, so it stays ordered in greyscale and under CVD —
-  a multi-hue sequential scale. Because the hue sweeps regardless of where it
-  starts, a helix is the robust choice when no single seed is ideal: the seed
-  sets only the start hue and chroma.
+- **Helix** — a cubehelix-inspired path through OKLCH: designed OKLab
+  lightness steps evenly while hue rotates `rotations` full turns from the
+  seed. It is a multi-hue sequential scale, but hue-dependent luminance can
+  still reverse after gamut mapping or simulated CVD. The audit therefore
+  reports normal greyscale order, `cvd_luminance_monotonic`, and adjacent
+  separation instead of assuming safety from the construction. Because the
+  hue sweeps regardless of where it starts, the seed mainly sets the start
+  hue and baseline chroma.
 
 ```python
 generate_palette("#B84A3C", n=8, kind="helix", rotations=1.4, vividness=0.4)
@@ -191,7 +194,7 @@ portable.
 python3 -m pytest tests/ -q
 ```
 
-71 tests, including a pathological-seed battery (pure primaries, near-black,
+123 tests, including a pathological-seed battery (pure primaries, near-black,
 near-white, neutrals) and no-false-pass checks (impossible constraints must
 warn, never silently pass).
 
@@ -205,17 +208,20 @@ it — one reference algorithm, two frontends.
 An inclusive art experiment built on the same engine lives in
 [`experiments/`](experiments/): map the 12 pitch classes to a **helix** through
 colour space — angle = pitch class, height = lightness = pitch. Every note gets
-a colour; a rising scale becomes the cubehelix palette above.
+a colour; a rising scale traces the same kind of cubehelix-inspired path shown
+above.
 
 It is framed as art, not a tool, on purpose. The pitch-class → hue mapping is a
 *designed* convention (Newton and Scriabin chose different colours for C), so
 the piece asks the question rather than answering it. What the audit *can* say
-honestly is worked out in the experiment's README, minimum-not-mean: the colour
-carries pitch **height and octave** to every viewer including colour-blind ones
-(lightness survives simulated CVD), while fine semitone identity holds only for
-normal vision — the frontier sweep finds the code becomes semitone-safe for
-everyone only at ≤4 pitch classes per octave. The colours are checked so a
-colour-blind viewer and a hearing-different viewer meet in the same piece.
+honestly is worked out in the experiment's README, minimum-not-mean: octave
+pairs remain strongly separated in the simulations, while fine semitone
+identity does not survive CVD and the protanopia simulation contains four
+small local luminance reversals. The frontier sweep finds that ≤4 pitch classes
+per octave clears this package's exploratory ΔE design floor in the tested
+simulations; that floor is not a human-validated guarantee. The colours can
+enrich the shared artwork, but they do not replace sound, labels, position, or
+another redundant encoding.
 
 ## Roadmap
 
@@ -225,5 +231,5 @@ colour-blind viewer and a hearing-different viewer meet in the same piece.
 - [ ] Configurable severity (<1.0) for the CVD simulations
 - [ ] Fixture-level comparison against colorspacious/colorblindr
 - [ ] Vectorised CIEDE2000 for faster categorical generation (currently
-  ~2s for n=8, ~24s for n=24)
+  ~1.7s for n=8, ~17s for n=24 on one Apple-silicon test machine)
 - [ ] A methods/validation document

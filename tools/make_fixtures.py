@@ -40,6 +40,7 @@ PALETTES = [
     {"seed": "#3C7AC0", "n": 8, "kind": "helix"},
     {"seed": "#3C7AC0", "n": 10, "kind": "helix", "rotations": 1.5},
     {"seed": "#B84A3C", "n": 8, "kind": "helix", "rotations": -1.0, "vividness": 0.5},
+    {"seed": "#59FE48", "n": 20, "kind": "helix", "background": "#000000"},
 ]
 
 

@@ -14,9 +14,6 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.21515949
     description: "Concept DOI - resolves to the latest version"
-  - type: doi
-    value: 10.5281/zenodo.21515950
-    description: "Version DOI for 0.2.1"
 repository-code: "https://github.com/heidihelena/palettecore"
 keywords:
   - colour palette

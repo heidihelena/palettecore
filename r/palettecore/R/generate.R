@@ -55,7 +55,7 @@ DEFAULT_THRESHOLDS <- list(
     H <- (H_seed + 360 * rotations * t) %% 360
     c_max <- max_chroma(L, H)
     c_base <- min(max(C_seed, 0.08), c_max)
-    cc <- c_base + vividness * (0.92 * c_max - c_base)
+    cc <- c_base + vividness * (c_max - c_base)
     out[i, ] <- .clip01(oklab_to_srgb(oklch_to_oklab(c(L, cc, H))))
   }
   out
@@ -202,7 +202,22 @@ DEFAULT_THRESHOLDS <- list(
   if (kind %in% c("sequential", "helix")) {
     diag$lightness_monotonic <- is_monotonic(grey)
     if (!is_monotonic(grey)) {
-      warnings <- c(warnings, "Greyscale luminance is not monotonic - order is lost in print.")
+      warnings <- c(warnings, "Greyscale luminance is not monotonic - luminance alone does not preserve order.")
+    }
+    if (kind == "helix") {
+      cvd_luminance_monotonic <- lapply(CVD_CONDITIONS, function(cond) {
+        is_monotonic(greyscale_values(sims[[cond]]))
+      })
+      names(cvd_luminance_monotonic) <- CVD_CONDITIONS
+      diag$cvd_luminance_monotonic <- cvd_luminance_monotonic
+      failed <- names(cvd_luminance_monotonic)[!unlist(cvd_luminance_monotonic)]
+      if (length(failed) > 0) {
+        warnings <- c(warnings, paste0(
+          "Simulated-CVD luminance is not monotonic for ",
+          paste(failed, collapse = ", "),
+          " - hue-dependent reversals may disrupt order; do not rely on colour alone."
+        ))
+      }
     }
   } else if (kind == "categorical") {
     spread <- max(grey) - min(grey)

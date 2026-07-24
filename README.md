@@ -64,7 +64,7 @@ from palettecore import generate_palette
 result = generate_palette(
     seed="#8B6FC9",
     n=8,
-    kind="sequential",   # or "diverging", "categorical"
+    kind="sequential",   # or "diverging", "categorical", "helix"
     background="#FFFFFF",
     use="data_fill",     # or "text", "line", "UI"
     anchor="path",       # or "exact" — see Stated conventions
@@ -128,6 +128,16 @@ All work happens in **OKLCH** (path construction, gamut clamping) with
 - **Diverging** — two sequential halves meeting at a near-neutral light
   centre. The second pole (seed hue + 180°) is a design assumption and is
   flagged as such in the warnings.
+- **Helix** — a cubehelix (Green 2011) through OKLCH: lightness steps evenly
+  while hue rotates `rotations` full turns from the seed. Monotonic in
+  lightness by construction, so it stays ordered in greyscale and under CVD —
+  a multi-hue sequential scale. Because the hue sweeps regardless of where it
+  starts, a helix is the robust choice when no single seed is ideal: the seed
+  sets only the start hue and chroma.
+
+```python
+generate_palette("#B84A3C", n=8, kind="helix", rotations=1.4, vividness=0.4)
+```
 
 ## Stated conventions
 

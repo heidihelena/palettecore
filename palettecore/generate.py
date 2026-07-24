@@ -121,6 +121,32 @@ def _sequential_path(seed_lch, n, background_rgb, samples=512, vividness=0.0):
     return rgbs[idx]
 
 
+# ------------------------------------------------------------------- helix
+
+
+def _helix_path(seed_lch, n, background_rgb, rotations=1.0, vividness=0.0):
+    """A cubehelix through OKLCH (Green 2011, made perceptual): lightness steps
+    evenly while hue rotates `rotations` full turns from the seed hue. Chroma
+    follows the per-stop gamut, so it eases off at the light and dark ends on
+    its own. Monotonic lightness by construction, so it stays ordered in
+    greyscale and under CVD; the seed sets only the start hue and chroma, which
+    is why a helix is the robust choice when no single seed is ideal."""
+    L_seed, C_seed, H_seed = (float(v) for v in seed_lch)
+    bg_is_light = np.mean(background_rgb) > 0.5
+    L_hi, L_lo = (0.955, 0.30) if bg_is_light else (0.90, 0.22)
+
+    out = np.empty((n, 3))
+    for i in range(n):
+        t = i / (n - 1)
+        L = L_hi + (L_lo - L_hi) * t
+        H = (H_seed + 360.0 * rotations * t) % 360.0
+        c_max = max_chroma(L, H)
+        c_base = min(max(C_seed, 0.08), c_max)
+        c = c_base + vividness * (0.92 * c_max - c_base)
+        out[i] = np.clip(oklab_to_srgb(oklch_to_oklab(np.array([L, c, H]))), 0, 1)
+    return out
+
+
 # -------------------------------------------------------------- categorical
 
 
@@ -226,7 +252,7 @@ def _audit(rgbs, kind, background_rgb, use, thresholds):
 
     sims = {c: np.array([simulate_cvd(x, c) for x in rgbs]) for c in CONDITIONS}
 
-    if kind in ("sequential", "diverging"):
+    if kind in ("sequential", "diverging", "helix"):
         adjacent = {"normal": [ciede2000(rgbs[i], rgbs[i + 1]) for i in range(n - 1)]}
         for c in CONDITIONS:
             adjacent[c] = [ciede2000(sims[c][i], sims[c][i + 1]) for i in range(n - 1)]
@@ -257,7 +283,7 @@ def _audit(rgbs, kind, background_rgb, use, thresholds):
 
     grey = greyscale_values(rgbs)
     diag["greyscale_luminance"] = [round(v, 3) for v in grey]
-    if kind == "sequential":
+    if kind in ("sequential", "helix"):
         diag["lightness_monotonic"] = is_monotonic(grey)
         if not is_monotonic(grey):
             warnings.append("Greyscale luminance is not monotonic — order is lost in print.")
@@ -329,11 +355,16 @@ def generate_palette(
     thresholds: dict | None = None,
     anchor: str = "path",
     vividness: float = 0.0,
+    rotations: float = 1.0,
 ) -> PaletteResult:
     """Generate an audited palette from one seed colour.
 
-    kind:      'sequential' | 'diverging' | 'categorical'
+    kind:      'sequential' | 'diverging' | 'categorical' | 'helix'
     use:       'data_fill' | 'text' | 'line' | 'UI'
+    rotations: helix only — how many full hue turns the cubehelix makes over
+               its lightness range (may be fractional or negative for the
+               other direction). Ignored, and rejected if non-default, for
+               other kinds.
     anchor:    'path' (seed defines the path; exact HEX may not appear) or
                'exact' (nearest sequential/diverging stop snapped to the seed,
                at the cost of slightly uneven spacing). Categorical palettes
@@ -349,10 +380,14 @@ def generate_palette(
     actually returned as HEX, never on internal floating-point values, so
     the audit describes exactly the palette the caller receives.
     """
-    if kind not in ("sequential", "diverging", "categorical"):
+    if kind not in ("sequential", "diverging", "categorical", "helix"):
         raise ValueError(f"Unknown palette kind: {kind!r}")
     if anchor not in ("path", "exact"):
         raise ValueError(f"Unknown anchor policy: {anchor!r}")
+    if not isinstance(rotations, (int, float)) or not np.isfinite(rotations):
+        raise ValueError(f"rotations must be a finite number, got {rotations!r}")
+    if kind != "helix" and rotations != 1.0:
+        raise ValueError("rotations only applies to kind='helix'")
     if use not in ("data_fill", "text", "line", "UI"):
         raise ValueError(
             f"Unknown use: {use!r} (expected 'data_fill', 'text', 'line' or 'UI')"
@@ -376,15 +411,18 @@ def generate_palette(
     background_rgb = hex_to_srgb(background)
 
     vividness = float(vividness)
+    rotations = float(rotations)
     if kind == "sequential":
         rgbs = _sequential_path(seed_lch, n, background_rgb, vividness=vividness)
     elif kind == "diverging":
         rgbs = _diverging(seed_lch, n, background_rgb, vividness=vividness)
+    elif kind == "helix":
+        rgbs = _helix_path(seed_lch, n, background_rgb, rotations=rotations, vividness=vividness)
     else:
         rgbs = _categorical(seed_lch, n, vividness=vividness)
 
     seed_rgb = hex_to_srgb(seed)
-    if kind in ("sequential", "diverging") and anchor == "exact":
+    if kind in ("sequential", "diverging", "helix") and anchor == "exact":
         i_near = int(np.argmin([ciede2000(c, seed_rgb) for c in rgbs]))
         rgbs[i_near] = seed_rgb
 
@@ -395,6 +433,8 @@ def generate_palette(
 
     diag, warnings = _audit(rgbs, kind, background_rgb, use, thresholds)
     diag["vividness"] = vividness
+    if kind == "helix":
+        diag["rotations"] = rotations
     diag["anchor"] = anchor if kind != "categorical" else "exact"
     diag["seed_nearest_stop_deltaE"] = round(
         min(ciede2000(c, seed_rgb) for c in rgbs), 1

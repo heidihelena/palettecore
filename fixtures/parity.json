@@ -952,6 +952,65 @@
     "#002E5B"
    ],
    "warnings_count": 0
+  },
+  {
+   "spec": {
+    "seed": "#3C7AC0",
+    "n": 8,
+    "kind": "helix"
+   },
+   "hexes": [
+    "#E6F1FF",
+    "#DEC4FF",
+    "#F390B6",
+    "#D57C4E",
+    "#8D7B00",
+    "#117337",
+    "#005055",
+    "#002E5B"
+   ],
+   "warnings_count": 0
+  },
+  {
+   "spec": {
+    "seed": "#3C7AC0",
+    "n": 10,
+    "kind": "helix",
+    "rotations": 1.5
+   },
+   "hexes": [
+    "#E6F1FF",
+    "#EBC9FF",
+    "#FFA3AC",
+    "#D99C44",
+    "#74A44F",
+    "#00908E",
+    "#2B6AAF",
+    "#6C3B85",
+    "#74172D",
+    "#412800"
+   ],
+   "warnings_count": 1
+  },
+  {
+   "spec": {
+    "seed": "#B84A3C",
+    "n": 8,
+    "kind": "helix",
+    "rotations": -1.0,
+    "vividness": 0.5
+   },
+   "hexes": [
+    "#FEEBE8",
+    "#FDB8E8",
+    "#AEA7FC",
+    "#1BA2DF",
+    "#158D81",
+    "#416E0B",
+    "#5B4106",
+    "#5B0602"
+   ],
+   "warnings_count": 1
   }
  ]
 }

@@ -15,29 +15,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from palettecore import generate_palette
-from palettecore.convert import (
-    hex_to_srgb,
-    max_chroma,
-    oklab_to_srgb,
-    oklch_to_oklab,
-    srgb_to_hex,
-)
 
 DOCS = pathlib.Path(__file__).resolve().parent.parent / "docs"
-
-
-def cubehelix_run(n=8, L_lo=0.32, L_hi=0.86, turns=1.4, h0=300.0):
-    """A helix through OKLCH: lightness climbs monotonically while hue rotates.
-    Chroma held to the per-lightness safe value so it stays in gamut."""
-    out = []
-    for i in range(n):
-        t = i / (n - 1)
-        L = L_lo + (L_hi - L_lo) * t
-        H = (h0 + 360 * turns * t) % 360
-        safe = 0.92 * min(max_chroma(L, float(h)) for h in np.linspace(0, 360, 90, endpoint=False))
-        C = min(safe, max_chroma(L, H))
-        out.append(srgb_to_hex(np.clip(oklab_to_srgb(oklch_to_oklab(np.array([L, C, H]))), 0, 1)))
-    return out
 
 
 def main():
@@ -49,8 +28,8 @@ def main():
          generate_palette("#B84A3C", n=9, kind="diverging").hexes),
         ("Categorical", "unordered groups, CVD-audited, vivid=0.6 (min ΔE 9.8)",
          generate_palette("#B57EDC", n=8, kind="categorical", vividness=0.6).hexes),
-        ("Helix (cubehelix-style)", "lightness climbs, hue rotates — a sequential scale that stays ordered in greyscale",
-         cubehelix_run(8)),
+        ("Helix (cubehelix)", "lightness climbs, hue rotates — a sequential scale that stays ordered in greyscale",
+         generate_palette("#B84A3C", n=8, kind="helix", rotations=1.4, vividness=0.4).hexes),
     ]
 
     fig, axes = plt.subplots(len(rows), 1, figsize=(9, 5.2))

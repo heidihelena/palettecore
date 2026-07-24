@@ -12,7 +12,8 @@ generate_palette(
   use = "data_fill",
   thresholds = NULL,
   anchor = "path",
-  vividness = 0
+  vividness = 0,
+  rotations = 1
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ generate_palette(
 \item{vividness}{0.0 (default, seed-faithful) to 1.0 (chroma pushed toward
 the gamut edge). Lifts chroma only, never lightness, on every kind; the
 default reproduces earlier versions exactly.}
+
+\item{rotations}{Helix only: how many full hue turns the cubehelix makes
+over its lightness range (fractional or negative allowed). Rejected if
+non-default for other kinds.}
 }
 \value{
 List with hexes, diagnostics and warnings.

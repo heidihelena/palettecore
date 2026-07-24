@@ -21,8 +21,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("-n", type=int, default=8, help="number of colours (2-24, default 8)")
     p.add_argument(
         "--kind",
-        choices=["sequential", "diverging", "categorical"],
+        choices=["sequential", "diverging", "categorical", "helix"],
         default="sequential",
+    )
+    p.add_argument(
+        "--rotations", type=float, default=1.0,
+        help="helix only: full hue turns over the lightness range",
     )
     p.add_argument("--background", default="#FFFFFF", help="intended background HEX")
     p.add_argument(
@@ -47,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
             use=args.use,
             anchor=args.anchor,
             vividness=args.vividness,
+            rotations=args.rotations,
         )
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)

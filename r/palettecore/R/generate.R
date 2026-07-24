@@ -43,6 +43,24 @@ DEFAULT_THRESHOLDS <- list(
   rgbs[idx, , drop = FALSE]
 }
 
+.helix_path <- function(seed_lch, n, background_rgb, rotations = 1.0, vividness = 0.0) {
+  L_seed <- seed_lch[1]; C_seed <- seed_lch[2]; H_seed <- seed_lch[3]
+  bg_is_light <- mean(background_rgb) > 0.5
+  if (bg_is_light) { L_hi <- 0.955; L_lo <- 0.30 } else { L_hi <- 0.90; L_lo <- 0.22 }
+
+  out <- matrix(0, nrow = n, ncol = 3)
+  for (i in seq_len(n)) {
+    t <- (i - 1) / (n - 1)
+    L <- L_hi + (L_lo - L_hi) * t
+    H <- (H_seed + 360 * rotations * t) %% 360
+    c_max <- max_chroma(L, H)
+    c_base <- min(max(C_seed, 0.08), c_max)
+    cc <- c_base + vividness * (0.92 * c_max - c_base)
+    out[i, ] <- .clip01(oklab_to_srgb(oklch_to_oklab(c(L, cc, H))))
+  }
+  out
+}
+
 .categorical <- function(seed_lch, n, vividness = 0.0) {
   L_seed <- seed_lch[1]; C_seed <- seed_lch[2]; H_seed <- seed_lch[3]
   L_band <- min(max(L_seed, 0.55), 0.78)
@@ -137,7 +155,7 @@ DEFAULT_THRESHOLDS <- list(
   })
   names(sims) <- CVD_CONDITIONS
 
-  if (kind %in% c("sequential", "diverging")) {
+  if (kind %in% c("sequential", "diverging", "helix")) {
     adjacent <- list(
       normal = vapply(1:(n - 1), function(i) ciede2000(rgbs[i, ], rgbs[i + 1, ]), numeric(1))
     )
@@ -181,7 +199,7 @@ DEFAULT_THRESHOLDS <- list(
 
   grey <- greyscale_values(rgbs)
   diag$greyscale_luminance <- round(grey, 3)
-  if (kind == "sequential") {
+  if (kind %in% c("sequential", "helix")) {
     diag$lightness_monotonic <- is_monotonic(grey)
     if (!is_monotonic(grey)) {
       warnings <- c(warnings, "Greyscale luminance is not monotonic - order is lost in print.")
@@ -261,6 +279,9 @@ DEFAULT_THRESHOLDS <- list(
 #' @return List with hexes, diagnostics and warnings.
 #' @importFrom utils modifyList
 #' @importFrom stats setNames
+#' @param rotations Helix only: how many full hue turns the cubehelix makes
+#'   over its lightness range (fractional or negative allowed). Rejected if
+#'   non-default for other kinds.
 #' @examples
 #' r <- generate_palette("#8B6FC9", n = 4, kind = "sequential")
 #' r$hexes
@@ -268,13 +289,21 @@ DEFAULT_THRESHOLDS <- list(
 #' @export
 generate_palette <- function(seed, n = 8L, kind = "sequential",
                              background = "#FFFFFF", use = "data_fill",
-                             thresholds = NULL, anchor = "path", vividness = 0.0) {
-  if (!kind %in% c("sequential", "diverging", "categorical")) {
+                             thresholds = NULL, anchor = "path", vividness = 0.0,
+                             rotations = 1.0) {
+  if (!kind %in% c("sequential", "diverging", "categorical", "helix")) {
     stop(sprintf("Unknown palette kind: '%s'", kind))
   }
   if (!anchor %in% c("path", "exact")) {
     stop(sprintf("Unknown anchor policy: '%s'", anchor))
   }
+  if (!is.numeric(rotations) || length(rotations) != 1 || !is.finite(rotations)) {
+    stop("rotations must be a finite number")
+  }
+  if (kind != "helix" && rotations != 1.0) {
+    stop("rotations only applies to kind='helix'")
+  }
+  rotations <- as.numeric(rotations)
   if (!use %in% c("data_fill", "text", "line", "UI")) {
     stop(sprintf("Unknown use: '%s' (expected 'data_fill', 'text', 'line' or 'UI')", use))
   }
@@ -307,11 +336,12 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   rgbs <- switch(kind,
     sequential = .sequential_path(seed_lch, n, background_rgb, vividness = vividness),
     diverging = .diverging(seed_lch, n, background_rgb, vividness = vividness),
+    helix = .helix_path(seed_lch, n, background_rgb, rotations = rotations, vividness = vividness),
     categorical = .categorical(seed_lch, n, vividness = vividness)
   )
 
   seed_rgb <- hex_to_srgb(seed)
-  if (kind %in% c("sequential", "diverging") && anchor == "exact") {
+  if (kind %in% c("sequential", "diverging", "helix") && anchor == "exact") {
     dists <- apply(rgbs, 1, ciede2000, rgb2 = seed_rgb)
     rgbs[which.min(dists), ] <- seed_rgb
   }
@@ -325,6 +355,7 @@ generate_palette <- function(seed, n = 8L, kind = "sequential",
   diag <- audit$diagnostics
   warnings <- audit$warnings
   diag$vividness <- vividness
+  if (kind == "helix") diag$rotations <- rotations
   diag$anchor <- if (kind == "categorical") "exact" else anchor
   diag$seed_nearest_stop_deltaE <- round(min(apply(rgbs, 1, ciede2000, rgb2 = seed_rgb)), 1)
 

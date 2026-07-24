@@ -37,6 +37,9 @@ PALETTES = [
     {"seed": "#B57EDC", "n": 8, "kind": "categorical", "vividness": 1.0},
     {"seed": "#B57EDC", "n": 8, "kind": "categorical", "vividness": 0.5},
     {"seed": "#3C7AC0", "n": 8, "kind": "sequential", "vividness": 1.0},
+    {"seed": "#3C7AC0", "n": 8, "kind": "helix"},
+    {"seed": "#3C7AC0", "n": 10, "kind": "helix", "rotations": 1.5},
+    {"seed": "#B84A3C", "n": 8, "kind": "helix", "rotations": -1.0, "vividness": 0.5},
 ]
 
 

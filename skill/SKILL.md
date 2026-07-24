@@ -20,9 +20,13 @@ palettecore reports whether package-default design thresholds are met under stat
 never verify, prove, guarantee, or "WCAG compliant" as a blanket claim.
 
 ## Invariants (hard constraints)
-1. **Kind follows the data's meaning, not aesthetics.** Ordered magnitude → `sequential`.
-   Meaningful centre (zero, baseline) → `diverging`. Unordered groups → `categorical` (monotonic
-   lightness would falsely imply order). Ask if unclear.
+1. **Kind follows the data's meaning, not aesthetics.** Ordered magnitude → `sequential`
+   (single hue) or `helix` (cubehelix: lightness climbs while hue rotates, a multi-hue
+   ordered scale that stays greyscale- and CVD-safe via lightness). Meaningful centre
+   (zero, baseline) → `diverging`. Unordered groups → `categorical` (monotonic lightness
+   would falsely imply order). Ask if unclear. `helix` is also the robust pick when the
+   seed is weak or arbitrary — its hue sweeps regardless of where it starts, so seed choice
+   barely matters (tune with `rotations`, default 1.0).
 2. **Declare the use and background.** A colour that works as an area fill fails as text; the
    audit is only meaningful for the declared `background` and `use` (`data_fill` / `text` /
    `line` / `UI`).

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "palettecore"
-version = "0.3.0"
+version = "0.4.0"
 description = "Derive, optimise and audit a scientific colour palette from one seed colour"
 readme = "README.md"
 license = "Apache-2.0"

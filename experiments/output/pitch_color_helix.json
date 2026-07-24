@@ -377,6 +377,28 @@
       "n_below_6": 17
     }
   },
+  "luminance_order": {
+    "normal": {
+      "monotonic_increasing": true,
+      "n_reversals": 0,
+      "worst_step": 0.0049
+    },
+    "protanopia": {
+      "monotonic_increasing": false,
+      "n_reversals": 4,
+      "worst_step": -0.0125
+    },
+    "deuteranopia": {
+      "monotonic_increasing": true,
+      "n_reversals": 0,
+      "worst_step": 0.0058
+    },
+    "tritanopia": {
+      "monotonic_increasing": true,
+      "n_reversals": 0,
+      "worst_step": 0.0006
+    }
+  },
   "min_octave_pair_deltaE": {
     "normal": 17.9,
     "protanopia": 16.6,

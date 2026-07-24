@@ -45,6 +45,16 @@ def test_helix_vividness_applies():
     assert vc > mc
 
 
+def test_helix_vividness_never_reduces_saturated_seed_chroma():
+    muted = generate_palette("#FF0000", n=8, kind="helix", vividness=0.0)
+    vivid = generate_palette("#FF0000", n=8, kind="helix", vividness=1.0)
+    muted_c = np.array([hex_to_oklch(h)[1] for h in muted.hexes])
+    vivid_c = np.array([hex_to_oklch(h)[1] for h in vivid.hexes])
+    # Allow one small 8-bit quantisation step, but vividness must never be a
+    # systematic chroma-reduction control at gamut-limited stops.
+    assert np.all(vivid_c >= muted_c - 0.002)
+
+
 def test_helix_anchor_exact():
     r = generate_palette("#3C7AC0", n=8, kind="helix", anchor="exact")
     assert "#3C7AC0" in r.hexes
@@ -65,3 +75,16 @@ def test_helix_audited_like_sequential():
     r = generate_palette("#3C7AC0", n=8, kind="helix")
     assert "min_adjacent_deltaE" in r.diagnostics
     assert "greyscale_luminance" in r.diagnostics
+    assert r.diagnostics["cvd_luminance_monotonic"] == {
+        "protanopia": True,
+        "deuteranopia": True,
+        "tritanopia": True,
+    }
+
+
+def test_helix_warns_when_cvd_luminance_order_reverses():
+    r = generate_palette(
+        "#59FE48", n=20, kind="helix", background="#000000"
+    )
+    assert not r.diagnostics["cvd_luminance_monotonic"]["protanopia"]
+    assert any("Simulated-CVD luminance is not monotonic" in w for w in r.warnings)

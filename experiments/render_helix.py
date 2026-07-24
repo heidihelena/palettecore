@@ -45,8 +45,8 @@ def main():
     fig.suptitle("Pitch helix: angle = pitch class, height = lightness = absolute pitch",
                  fontsize=13, fontweight="bold", y=0.97)
     fig.text(0.5, 0.04,
-             "Under deuteranopia the hues flatten, but the vertical climb (lightness) survives.\n"
-             "Adjacent semitone dE stays above threshold; octave pairs are strongly separated for all viewers.",
+             "Under simulated deuteranopia the hues flatten; many adjacent semitones fall below the design floor.\n"
+             "Octave pairs remain strongly separated in all simulations; colour does not replace sound or position.",
              ha="center", fontsize=8.3, color="#555")
     plt.subplots_adjust(top=0.9, bottom=0.13, wspace=0.05)
     plt.savefig(OUT / "pitch_color_helix.png", dpi=150, facecolor="white")

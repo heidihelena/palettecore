@@ -35,16 +35,17 @@ def main():
     axB.plot(ks, cvdB, "s-", color="#d95926", label="worst CVD condition")
     axB.axhline(floor, ls="--", color="#888", lw=1)
     axB.axvline(4, ls=":", color="#1baf7a", lw=1.5)
-    axB.text(4.1, 28, "CVD-safe\nat <=4/octave", fontsize=8, color="#0f6e56")
+    axB.text(4.1, 28, "clears design floor\nat <=4/octave", fontsize=8, color="#0f6e56")
     axB.set_title("B. Resolution sweep (3 octaves)", fontsize=11, fontweight="bold")
     axB.set_xlabel("pitch classes per octave")
     axB.set_ylabel("minimum adjacent dE00")
     axB.legend(fontsize=8, frameon=False)
 
-    fig.suptitle("Semitone-safety frontier: only fewer classes/octave crosses the floor for every viewer",
+    fig.suptitle("Pitch-colour frontier: only fewer classes/octave crosses the design floor",
                  fontsize=12, fontweight="bold")
     fig.text(0.5, 0.01, "Reported as MINIMUM adjacent dE (not mean). Range compression never reaches the floor; "
-             "resolution does, at <=4 classes/octave.", ha="center", fontsize=8.2, color="#555")
+             "resolution does at <=4 classes/octave in these simulations; this is not a human-validated cutoff.",
+             ha="center", fontsize=8.2, color="#555")
     plt.tight_layout(rect=[0, 0.04, 1, 0.94])
     plt.savefig(OUT / "pitch_color_frontier.png", dpi=150, facecolor="white")
     print(f"wrote {OUT / 'pitch_color_frontier.png'}")

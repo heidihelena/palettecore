@@ -65,6 +65,8 @@ _M2 = np.array(
         [0.0259040371, 0.7827717662, -0.8086757660],
     ]
 )
+_M1_INV = np.linalg.inv(_M1)
+_M2_INV = np.linalg.inv(_M2)
 
 
 def linear_to_oklab(lin: np.ndarray) -> np.ndarray:
@@ -75,9 +77,9 @@ def linear_to_oklab(lin: np.ndarray) -> np.ndarray:
 
 def oklab_to_linear(lab: np.ndarray) -> np.ndarray:
     lab = np.asarray(lab, dtype=float)
-    lms = lab @ np.linalg.inv(_M2).T
+    lms = lab @ _M2_INV.T
     lms = lms**3
-    return lms @ np.linalg.inv(_M1).T
+    return lms @ _M1_INV.T
 
 
 def srgb_to_oklab(rgb: np.ndarray) -> np.ndarray:

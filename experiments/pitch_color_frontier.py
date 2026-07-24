@@ -1,16 +1,18 @@
-"""Where does the pitch helix become semitone-safe for every viewer?
+"""Where does the pitch helix clear palettecore's exploratory design floor?
 
-Two sweeps that map the tension the helix audit exposed: height/octave is
-CVD-safe, but adjacent-semitone identity is not, because the per-step lightness
-increment is too small to lift a CVD-collapsed hue above the dE 6 floor.
+Two sweeps that map the tension the helix audit exposed: octave pairs remain
+strongly separated in the simulations, but adjacent-semitone identity does
+not, because the per-step lightness increment is too small to lift a
+CVD-collapsed hue above the dE 6 design floor.
 
   A. RANGE sweep (12 classes/octave): shrink the pitch range so lightness
-     climbs faster per semitone. How few octaves buy semitone-safety for all?
+     climbs faster per semitone. Can any tested span clear the floor?
   B. RESOLUTION sweep (fixed 3 octaves): fewer classes/octave = bigger hue
      steps. How coarse must the scale be before every step clears 6 for all?
 
 Everything is reported as the MINIMUM adjacent dE and the count of steps below
-the floor, per observer — never the mean.
+the floor, per simulation — never the mean. The dE 6 floor is a package design
+rule, not a human-validated threshold or guarantee of safety.
 """
 
 from __future__ import annotations
@@ -98,31 +100,32 @@ def main():
     result = {"floor": FLOOR, "range_sweep": {}, "resolution_sweep": {}}
 
     print("A. RANGE sweep (12 classes/octave). CVD-min = worst min over the 3 deficiencies.\n")
-    print(f"  {'octaves':>7s} {'dL/step':>8s} {'normal':>7s} {'CVD-min':>8s} {'CVD steps<6':>12s}  semitone-safe?")
+    print(f"  {'octaves':>7s} {'dL/step':>8s} {'normal':>7s} {'CVD-min':>8s} {'CVD steps<6':>12s}  clears floor?")
     for octaves in (1, 2, 3, 4, 6):
         cols = helix_colours(12, octaves)
         st = adjacent_min(cols)
         cvd_min = _cvd_worst_min(st)
         cvd_below = sum(st[c]["below_floor"] for c in CONDITIONS)
-        safe = all(st[c]["min"] >= FLOOR for c in CONDITIONS)
+        clears = all(st[c]["min"] >= FLOOR for c in CONDITIONS)
         dL = round(0.62 / (12 * octaves), 4)
         result["range_sweep"][octaves] = {"dL_per_step": dL, "stats": st,
-                                          "cvd_min": cvd_min, "semitone_safe_all_cvd": safe}
+                                          "cvd_min": cvd_min,
+                                          "clears_design_floor_all_cvd": clears}
         print(f"  {octaves:7d} {dL:8.4f} {st['normal']['min']:7.1f} {cvd_min:8.1f} "
-              f"{cvd_below:12d}  {'YES' if safe else 'no'}")
+              f"{cvd_below:12d}  {'YES' if clears else 'no'}")
 
     print("\nB. RESOLUTION sweep (fixed 3 octaves). Fewer classes/octave = bigger hue steps.\n")
-    print(f"  {'classes':>7s} {'normal':>7s} {'CVD-min':>8s} {'CVD steps<6':>12s}  semitone-safe?")
+    print(f"  {'classes':>7s} {'normal':>7s} {'CVD-min':>8s} {'CVD steps<6':>12s}  clears floor?")
     for k in (12, 7, 6, 5, 4, 3):
         cols = helix_colours(k, 3)
         st = adjacent_min(cols)
         cvd_min = _cvd_worst_min(st)
         cvd_below = sum(st[c]["below_floor"] for c in CONDITIONS)
-        safe = all(st[c]["min"] >= FLOOR for c in CONDITIONS)
+        clears = all(st[c]["min"] >= FLOOR for c in CONDITIONS)
         result["resolution_sweep"][k] = {"stats": st, "cvd_min": cvd_min,
-                                         "semitone_safe_all_cvd": safe}
+                                         "clears_design_floor_all_cvd": clears}
         print(f"  {k:7d} {st['normal']['min']:7.1f} {cvd_min:8.1f} "
-              f"{cvd_below:12d}  {'YES' if safe else 'no'}")
+              f"{cvd_below:12d}  {'YES' if clears else 'no'}")
 
     (OUT / "pitch_color_frontier.json").write_text(json.dumps(result, indent=2))
     print(f"\nwrote {OUT / 'pitch_color_frontier.json'}")

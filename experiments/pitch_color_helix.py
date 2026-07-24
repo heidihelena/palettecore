@@ -1,15 +1,14 @@
 """Pitch-to-colour, helix model (not stacked circles).
 
-Correction to pitch_color_ring.py: pitch is a HELIX, not a closed circle.
+Correction to pitch_color_ring.py: model pitch as a HELIX, not a closed circle.
 - angle around the helix = pitch class (cyclic, 12 hues from the closed
   CIEDE2000-spaced ring)
 - height = lightness = absolute pitch (monotonic over the whole range)
 
-Because lightness rises monotonically with absolute pitch, and lightness is
-the one channel a dichromat keeps, notes an octave apart are always separated
-for every viewer. The within-octave hue collapse under CVD only bites when two
-notes sit at the SAME height; on the helix, melodic motion moves height, so
-the octave/lightness axis carries the CVD-safe disambiguation automatically.
+Designed lightness rises monotonically with absolute pitch. The audit must
+still check the returned colours under each simulation: hue-dependent
+luminance can reverse locally, and adjacent notes can collapse even while
+octave pairs remain well separated.
 """
 
 from __future__ import annotations
@@ -21,7 +20,7 @@ import numpy as np
 
 from palettecore.convert import hex_to_srgb, max_chroma, oklab_to_srgb, oklch_to_oklab, srgb_to_hex
 from palettecore.cvd import CONDITIONS, simulate_cvd
-from palettecore.metrics import ciede2000
+from palettecore.metrics import ciede2000, greyscale_values
 from pitch_color_ring import closed_deltaE_ring  # the 12 ΔE-spaced hue angles
 
 NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -63,6 +62,20 @@ def main():
     hx = helix()
     rgbs = [hex_to_srgb(p["hex"]) for p in hx]
 
+    # Pitch order is an increasing-luminance claim, not merely a colour-
+    # difference claim. Report local reversals explicitly for every model.
+    luminance_order = {}
+    for cond in (None, *CONDITIONS):
+        key = cond or "normal"
+        cols = [simulate_cvd(c, cond) if cond else c for c in rgbs]
+        vals = greyscale_values(np.array(cols))
+        steps = np.diff(vals)
+        luminance_order[key] = {
+            "monotonic_increasing": bool(np.all(steps >= -1e-4)),
+            "n_reversals": int(np.sum(steps < -1e-4)),
+            "worst_step": round(float(np.min(steps)), 4),
+        }
+
     # Adjacent semitone steps (melodic neighbours): the FULL per-interval
     # vector under each vision, so min (not just mean) drives the claim.
     adj = {}
@@ -83,7 +96,8 @@ def main():
             "n_below_6": int(np.sum(np.array(vec) < 6.0)),
         }
 
-    # Octave neighbours (n, n+12): the CVD-safe separation lightness buys.
+    # Octave neighbours (n, n+12): the strong separation lightness buys in
+    # these simulations.
     octpairs = {}
     for cond in (None, *CONDITIONS):
         key = cond or "normal"
@@ -97,6 +111,7 @@ def main():
                         "per-lightness safe value (narrows near L extremes)",
                "notes": hx,
                "adjacent_semitone_deltaE": adj,
+               "luminance_order": luminance_order,
                "min_octave_pair_deltaE": octpairs}
     (OUT / "pitch_color_helix.json").write_text(json.dumps(mapping, indent=2))
 
@@ -110,6 +125,12 @@ def main():
     for k, s in adj.items():
         print(f"  {k:13s} {s['min']:5.1f} {s['mean']:5.1f} {s['max']:5.1f} {s['spread']:7.1f} "
               f"{s['n_below_6']:4d}  {s['worst_interval']} ({s['worst_value']})")
+    print("\nLUMINANCE order with rising pitch:")
+    for k, s in luminance_order.items():
+        print(
+            f"  {k:13s} monotonic={str(s['monotonic_increasing']):5s} "
+            f"reversals={s['n_reversals']:2d}  worst step={s['worst_step']:+.4f}"
+        )
     print(f"\nMin OCTAVE-pair ΔE (n vs n+12), by vision:\n  {octpairs}")
     print("\nReading: the claim to report is the MINIMUM adjacent ΔE per condition, and how\n"
           "many steps fall below the threshold — not the mean.")

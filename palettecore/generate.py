@@ -12,10 +12,10 @@ greedy selection and swap passes are all deterministic, so the same inputs
 always produce the same palette.
 
 Seed anchoring: the categorical palette always contains the seed exactly.
-For sequential/diverging the seed defines the path (hue + chroma envelope)
-but the exact HEX is not guaranteed to be a stop; anchor="exact" snaps the
-nearest stop to the seed at the cost of slightly uneven spacing, and the
-audit reports the seed-to-nearest-stop distance either way.
+For sequential/diverging/helix the seed defines the path but the exact HEX
+is not guaranteed to be a stop; anchor="exact" snaps the nearest stop to the
+seed at the cost of slightly uneven spacing, and the audit reports the
+seed-to-nearest-stop distance either way.
 """
 
 from __future__ import annotations
@@ -125,12 +125,14 @@ def _sequential_path(seed_lch, n, background_rgb, samples=512, vividness=0.0):
 
 
 def _helix_path(seed_lch, n, background_rgb, rotations=1.0, vividness=0.0):
-    """A cubehelix through OKLCH (Green 2011, made perceptual): lightness steps
-    evenly while hue rotates `rotations` full turns from the seed hue. Chroma
-    follows the per-stop gamut, so it eases off at the light and dark ends on
-    its own. Monotonic lightness by construction, so it stays ordered in
-    greyscale and under CVD; the seed sets only the start hue and chroma, which
-    is why a helix is the robust choice when no single seed is ideal."""
+    """A cubehelix-inspired path through OKLCH: OKLab lightness steps evenly
+    while hue rotates `rotations` full turns from the seed hue. Chroma follows
+    the per-stop gamut, so it eases off at the light and dark ends on its own.
+
+    Designed OKLab lightness is monotonic by construction. The audit separately
+    checks the returned HEX colours' relative luminance, simulated-CVD
+    separation, and simulated-CVD luminance order; none is assumed from the
+    construction alone."""
     L_seed, C_seed, H_seed = (float(v) for v in seed_lch)
     bg_is_light = np.mean(background_rgb) > 0.5
     L_hi, L_lo = (0.955, 0.30) if bg_is_light else (0.90, 0.22)
@@ -142,7 +144,7 @@ def _helix_path(seed_lch, n, background_rgb, rotations=1.0, vividness=0.0):
         H = (H_seed + 360.0 * rotations * t) % 360.0
         c_max = max_chroma(L, H)
         c_base = min(max(C_seed, 0.08), c_max)
-        c = c_base + vividness * (0.92 * c_max - c_base)
+        c = c_base + vividness * (c_max - c_base)
         out[i] = np.clip(oklab_to_srgb(oklch_to_oklab(np.array([L, c, H]))), 0, 1)
     return out
 
@@ -286,7 +288,21 @@ def _audit(rgbs, kind, background_rgb, use, thresholds):
     if kind in ("sequential", "helix"):
         diag["lightness_monotonic"] = is_monotonic(grey)
         if not is_monotonic(grey):
-            warnings.append("Greyscale luminance is not monotonic — order is lost in print.")
+            warnings.append(
+                "Greyscale luminance is not monotonic — luminance alone does not preserve order."
+            )
+        if kind == "helix":
+            cvd_luminance_monotonic = {
+                c: is_monotonic(greyscale_values(sims[c])) for c in CONDITIONS
+            }
+            diag["cvd_luminance_monotonic"] = cvd_luminance_monotonic
+            failed = [c for c, passed in cvd_luminance_monotonic.items() if not passed]
+            if failed:
+                warnings.append(
+                    "Simulated-CVD luminance is not monotonic for "
+                    f"{', '.join(failed)} — hue-dependent reversals may disrupt order; "
+                    "do not rely on colour alone."
+                )
     elif kind == "categorical":
         spread = float(grey.max() - grey.min())
         diag["greyscale_spread"] = round(spread, 3)
@@ -366,9 +382,10 @@ def generate_palette(
                other direction). Ignored, and rejected if non-default, for
                other kinds.
     anchor:    'path' (seed defines the path; exact HEX may not appear) or
-               'exact' (nearest sequential/diverging stop snapped to the seed,
-               at the cost of slightly uneven spacing). Categorical palettes
-               always contain the seed exactly, regardless of this setting.
+               'exact' (nearest sequential/diverging/helix stop snapped to the
+               seed, at the cost of slightly uneven spacing). Categorical
+               palettes always contain the seed exactly, regardless of this
+               setting.
     vividness: 0.0 (default, seed-faithful — a muted seed gives a muted
                family) to 1.0 (chroma pushed toward the gamut edge). Applies
                to every kind: it lifts chroma only, never lightness, so

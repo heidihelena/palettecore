@@ -1,0 +1,120 @@
+{
+  "model": "12-TET from middle C; closed CIEDE2000-spaced colour ring; octave->lightness",
+  "f_hz": {
+    "C": 261.63,
+    "C#": 277.18,
+    "D": 293.67,
+    "D#": 311.13,
+    "E": 329.63,
+    "F": 349.23,
+    "F#": 370.0,
+    "G": 392.0,
+    "G#": 415.31,
+    "A": 440.0,
+    "A#": 466.16,
+    "B": 493.88
+  },
+  "hue_angles_deg": {
+    "C": 0.0,
+    "C#": 28.0,
+    "D": 53.8,
+    "D#": 81.2,
+    "E": 108.8,
+    "F": 137.2,
+    "F#": 168.8,
+    "G": 197.2,
+    "G#": 225.0,
+    "A": 255.8,
+    "A#": 288.2,
+    "B": 324.5
+  },
+  "octaves": {
+    "C3": {
+      "lightness": 0.5,
+      "colours": {
+        "C": "#885061",
+        "C#": "#8A514A",
+        "D": "#865637",
+        "D#": "#7A5E2A",
+        "E": "#67672E",
+        "F": "#4D6E41",
+        "F#": "#2D725B",
+        "G": "#197173",
+        "G#": "#276C85",
+        "A": "#45658F",
+        "A#": "#615C8D",
+        "B": "#7A537C"
+      },
+      "audit_min_deltaE": {
+        "normal": 9.9,
+        "protanopia": 1.8,
+        "deuteranopia": 0.7,
+        "tritanopia": 1.7
+      }
+    },
+    "C4": {
+      "lightness": 0.65,
+      "colours": {
+        "C": "#C2748D",
+        "C#": "#C6766C",
+        "D": "#BF7D51",
+        "D#": "#AF8840",
+        "E": "#949445",
+        "F": "#719E5F",
+        "F#": "#44A384",
+        "G": "#28A2A5",
+        "G#": "#3B9CBE",
+        "A": "#6591CC",
+        "A#": "#8C85CA",
+        "B": "#AE79B2"
+      },
+      "audit_min_deltaE": {
+        "normal": 12.2,
+        "protanopia": 2.1,
+        "deuteranopia": 0.8,
+        "tritanopia": 2.1
+      }
+    },
+    "C5": {
+      "lightness": 0.78,
+      "colours": {
+        "C": "#EE9CB5",
+        "C#": "#F29E93",
+        "D": "#EBA578",
+        "D#": "#D9B168",
+        "E": "#BDBD6D",
+        "F": "#98C786",
+        "F#": "#6FCDAC",
+        "G": "#5BCCCE",
+        "G#": "#67C5E9",
+        "A": "#8CBAF8",
+        "A#": "#B4ADF5",
+        "B": "#D8A1DC"
+      },
+      "audit_min_deltaE": {
+        "normal": 12.1,
+        "protanopia": 1.7,
+        "deuteranopia": 0.9,
+        "tritanopia": 2.1
+      }
+    }
+  },
+  "closed_ring_adjacent_deltaE": {
+    "values": [
+      12.7,
+      12.6,
+      12.2,
+      12.9,
+      12.4,
+      12.3,
+      12.7,
+      12.2,
+      12.4,
+      12.4,
+      12.5,
+      12.2
+    ],
+    "mean": 12.5,
+    "spread": 0.7
+  }
+}

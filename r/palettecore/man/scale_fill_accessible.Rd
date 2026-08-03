@@ -13,6 +13,16 @@ scale_fill_accessible(seed, kind = "categorical", ...)
 
 \item{...}{Passed to generate_palette() (background, use, thresholds, ...).}
 }
+\value{
+A ggplot2 discrete scale object (class \code{ScaleDiscrete}, a \code{ggproto}
+object) for the \code{fill} aesthetic, to be added to a ggplot with \code{+}.
+When the plot is built, the scale generates an audited palette of hex
+colours for the number of levels in the data and emits any audit
+warnings (colour-vision deficiency, greyscale, gamut or contrast
+failures) via \code{warning()}.
+}
 \description{
-Discrete fill scale from an audited palettecore palette
+Generates the palette with generate_palette() and surfaces its audit
+warnings via warning(), so an inaccessible combination never passes
+silently into a figure.
 }

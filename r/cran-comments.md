@@ -1,7 +1,20 @@
-# cran-comments for palettecore 0.2.2
+# cran-comments for palettecore 0.4.1
 
-(0.2.0 is the version currently in CRAN incoming review; 0.2.2 is the
-prepared update / resubmission with audit-correctness fixes.)
+## Resubmission
+
+This is a resubmission addressing the CRAN review comments of 2026-08-03
+(Konstanze Lauseker) on 0.4.0:
+
+- Acronyms in the Description are now explained: OKLCH (the cylindrical
+  lightness-chroma-hue representation of the Oklab perceptual colour
+  space), CIEDE2000 (colour-difference formula of the International
+  Commission on Illumination), sRGB (standard Red Green Blue) and WCAG
+  (Web Content Accessibility Guidelines). Software names are written in
+  single quotes ('Python').
+- Added \value tags to scale_colour_accessible.Rd and
+  scale_fill_accessible.Rd, describing the returned ggplot2 discrete
+  scale object (class ScaleDiscrete, a ggproto object), what it does when
+  the plot is built, and the audit warnings it emits.
 
 ## Test environments
 
@@ -16,22 +29,13 @@ prepared update / resubmission with audit-correctness fixes.)
 - "unable to verify current time" — local network restriction during the
   check, not a package property.
 
-## Changes in 0.2.2
-
-- Every diagnostic is now computed on the 8-bit quantised colours actually
-  returned as HEX, never on internal floating-point values (fixes rare
-  false-pass/false-warning threshold results near the boundary).
-- anchor = "exact" now also snaps diverging palettes to the seed.
-- Input validation for `use`, threshold names and threshold values.
-- Diverging palettes require n >= 3 and report an arm-structure diagnostic.
-
 ## Notes for reviewers
 
-- The package mirrors a Python reference implementation maintained in the
+- The package mirrors a 'Python' reference implementation maintained in the
   same repository (https://github.com/heidihelena/palettecore) and is
   validated against shared cross-language parity fixtures: conversions and
   colour distances agree within 1e-6, generated palette HEX codes exactly.
-- All colour science (OKLab/OKLCH, CIELAB under D65, CIEDE2000, Machado
+- All colour science (Oklab/OKLCH, CIELAB under D65, CIEDE2000, Machado
   et al. 2009 CVD matrices) is implemented in base R with no compiled code
   and no dependencies beyond stats/utils (ggplot2 and jsonlite in Suggests).
 - Generation is deterministic; no random state is used anywhere.

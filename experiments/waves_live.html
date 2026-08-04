@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>waves to the shore — live</title>
+<!--
+  Waves to the shore — live variant: the sea listens.
+
+  Interactive art for a shared space. The page analyses whatever is playing
+  in the room (microphone) or a dropped audio file, and each wave is BORN AT
+  THE HORIZON wearing the colour of the music at that moment: dominant pitch
+  class -> hue, spectral register -> lightness, straight from the palettecore
+  pitch-colour helix (the full 12-class ladder, C3..C6, generated + audited
+  by experiments/waves_to_shore.py). A wave takes about half a minute to
+  reach the shore, so the screen holds the last few phrases of the song,
+  rolling in. Loudness drives the swell; onsets flash the foam at the
+  waterline; the waterline sheen follows the music instantly.
+
+  When the room goes quiet the sea does not die: it idles on a slow, gentle
+  note walk until sound returns.
+
+  Analysis is a folded chromagram (FFT magnitudes binned into 12 pitch
+  classes over ~65-2100 Hz) with a spectral-centroid register estimate —
+  robust for polyphonic music, and honest: it claims a dominant pitch
+  class, not a transcription. Nothing is recorded or sent anywhere; audio
+  stays in the analyser node.
+
+  Same caveat as the parent piece: pitch-class -> hue is a designed
+  convention, and the 12-class code is NOT distinguishable under simulated
+  colour-vision deficiency (see output/waves_to_shore.json). This is art,
+  not an accessible encoding.
+
+  Typography: Nudica / Nudica Italic (Atipo Foundry) with system fallback,
+  as in waves_ambient.html.
+
+  Office setup: fullscreen kiosk (F11 / kiosk mode), click "listen",
+  allow the microphone. Grant persists per origin on most kiosk setups.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica";
+    src: url("/fonts/nudica-light.woff2") format("woff2");
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Nudica";
+    src: url("/fonts/nudica-lightitalic.woff2") format("woff2");
+    font-weight: 300; font-style: italic; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #000; overflow: hidden; cursor: default; }
+  canvas { position: fixed; inset: 0; display: block; }
+  #hud {
+    position: fixed; inset: 0; pointer-events: none;
+    font-family: "Nudica", "Avenir Next", "Futura", system-ui, sans-serif;
+    font-weight: 300; color: #cfc9c2;
+    transition: opacity 1.6s ease; opacity: 1;
+  }
+  #hud.rest { opacity: 0; }
+  #title {
+    position: absolute; top: 22px; left: 26px;
+    font-style: italic; font-size: 17px; letter-spacing: .04em;
+  }
+  #sub {
+    position: absolute; top: 46px; left: 26px;
+    font-size: 11.5px; letter-spacing: .10em; opacity: .55;
+    text-transform: lowercase; pointer-events: auto;
+  }
+  #sub a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(207,201,194,.35); }
+  #note {
+    position: absolute; right: 26px; bottom: 22px;
+    font-size: 12px; letter-spacing: .12em; opacity: .8;
+  }
+  #controls {
+    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; gap: 10px; pointer-events: auto;
+  }
+  #controls button {
+    background: rgba(255,255,255,.06); color: #cfc9c2;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 3px;
+    font: 300 12px "Nudica", system-ui, sans-serif;
+    letter-spacing: .18em; text-transform: lowercase;
+    padding: 6px 16px; cursor: pointer;
+  }
+  #controls button:hover { background: rgba(255,255,255,.14); }
+  #state {
+    position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%);
+    font-size: 11px; letter-spacing: .22em; opacity: .45; text-transform: lowercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="sea"></canvas>
+<div id="hud">
+  <div id="title">waves to the shore &middot; live</div>
+  <div id="sub">the sea listens &middot;
+    <a href="https://github.com/heidihelena/palettecore" target="_blank" rel="noopener">palettecore</a></div>
+  <div id="note"></div>
+  <div id="state">idle &mdash; the sea drifts on its own</div>
+  <div id="controls">
+    <button id="mic">listen (microphone)</button>
+    <button id="file">play a file</button>
+  </div>
+</div>
+<input id="filepick" type="file" accept="audio/*" hidden>
+
+<script>
+(() => {
+"use strict";
+
+// The full 12-class pitch-colour helix, C3..C6, generated + audited by
+// experiments/waves_to_shore.py (output/waves_to_shore.json).
+const HELIX = [
+  { note: "C3", f: 130.81, hex: "#482832" },
+  { note: "C#3", f: 138.59, hex: "#4F2C28" },
+  { note: "D3", f: 146.83, hex: "#52331E" },
+  { note: "D#3", f: 155.56, hex: "#4F3C19" },
+  { note: "E3", f: 164.81, hex: "#47471E" },
+  { note: "F3", f: 174.61, hex: "#38512E" },
+  { note: "F#3", f: 185.0, hex: "#225947" },
+  { note: "G3", f: 196.0, hex: "#135D5F" },
+  { note: "G#3", f: 207.65, hex: "#215E74" },
+  { note: "A3", f: 220.0, hex: "#3E5C84" },
+  { note: "A#3", f: 233.08, hex: "#5D5888" },
+  { note: "B3", f: 246.94, hex: "#7B547D" },
+  { note: "C4", f: 261.63, hex: "#8F5467" },
+  { note: "C#4", f: 277.18, hex: "#995A52" },
+  { note: "D4", f: 293.67, hex: "#9A6440" },
+  { note: "D#4", f: 311.13, hex: "#927234" },
+  { note: "E4", f: 329.63, hex: "#81813B" },
+  { note: "F4", f: 349.23, hex: "#668E55" },
+  { note: "F#4", f: 370.0, hex: "#3F997C" },
+  { note: "G4", f: 392.0, hex: "#269DA0" },
+  { note: "G#4", f: 415.31, hex: "#3C9DBF" },
+  { note: "A4", f: 440.0, hex: "#6997D5" },
+  { note: "A#4", f: 466.16, hex: "#978FD9" },
+  { note: "B4", f: 493.88, hex: "#C287C6" },
+  { note: "C5", f: 523.25, hex: "#DE86A2" },
+  { note: "C#5", f: 554.37, hex: "#E98D81" },
+  { note: "D5", f: 587.33, hex: "#E89A66" },
+  { note: "D#5", f: 622.26, hex: "#D7AD60" },
+  { note: "E5", f: 659.26, hex: "#BEBF72" },
+  { note: "F5", f: 698.46, hex: "#A3CD93" },
+  { note: "F#5", f: 739.99, hex: "#8ED6BB" },
+  { note: "G5", f: 783.99, hex: "#8ED9DA" },
+  { note: "G#5", f: 830.61, hex: "#A0D9F0" },
+  { note: "A5", f: 880.0, hex: "#BCD7FB" },
+  { note: "A#5", f: 932.33, hex: "#D7D5FA" },
+  { note: "B5", f: 987.77, hex: "#EED6EF" },
+  { note: "C6", f: 1046.5, hex: "#FADBE3" },
+];
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+
+// ---------- listening: folded chromagram + register + onsets ---------------
+const FMIN = 65, FMAX = 2100;
+let ac = null, analyser = null, freqData = null, timeData = null, prevMag = null;
+let srcNode = null, fileAudio = null;
+const chroma = new Float32Array(12);      // smoothed
+let energy = 0, centroidOct = 4, confidence = 0, onsetFlux = 0, fluxAvg = 0.01;
+let listening = false;
+
+function attachSource(node) {
+  if (srcNode) try { srcNode.disconnect(); } catch (e) {}
+  srcNode = node;
+  node.connect(analyser);
+}
+function audioInit() {
+  if (ac) return;
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 4096;
+  analyser.smoothingTimeConstant = 0.5;
+  freqData = new Float32Array(analyser.frequencyBinCount);
+  timeData = new Float32Array(analyser.fftSize);
+  prevMag = new Float32Array(analyser.frequencyBinCount);
+}
+async function startMic() {
+  audioInit();
+  await ac.resume();
+  const stream = await navigator.mediaDevices.getUserMedia(
+    { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  attachSource(ac.createMediaStreamSource(stream));
+  listening = true;
+  stateEl.textContent = "listening";
+}
+function startFile(f) {
+  audioInit();
+  ac.resume();
+  if (fileAudio) { fileAudio.pause(); }
+  fileAudio = new Audio(URL.createObjectURL(f));
+  fileAudio.loop = true;
+  const node = ac.createMediaElementSource(fileAudio);
+  attachSource(node);
+  node.connect(ac.destination);            // the room hears the file too
+  fileAudio.play();
+  listening = true;
+  stateEl.textContent = "playing: " + f.name.toLowerCase();
+}
+
+function listen() {
+  if (!listening) return;
+  analyser.getFloatFrequencyData(freqData);
+  analyser.getFloatTimeDomainData(timeData);
+
+  let rms = 0;
+  for (let i = 0; i < timeData.length; i++) rms += timeData[i] * timeData[i];
+  rms = Math.sqrt(rms / timeData.length);
+  energy += 0.1 * (rms - energy);
+
+  const binHz = ac.sampleRate / analyser.fftSize;
+  const raw = new Float32Array(12);
+  let csum = 0, cmagsum = 0, flux = 0;
+  const i0 = Math.max(1, Math.floor(FMIN / binHz)), i1 = Math.min(freqData.length - 1, Math.ceil(FMAX / binHz));
+  for (let i = i0; i <= i1; i++) {
+    const mag = Math.pow(10, freqData[i] / 20);
+    const f = i * binHz;
+    const pc = ((Math.round(12 * Math.log2(f / 130.81)) % 12) + 12) % 12;
+    raw[pc] += mag;
+    csum += f * mag; cmagsum += mag;
+    const d = mag - prevMag[i];
+    if (d > 0) flux += d;
+    prevMag[i] = mag;
+  }
+  fluxAvg += 0.02 * (flux - fluxAvg);
+  onsetFlux = flux / (fluxAvg + 1e-9);
+
+  let tot = 0, mx = 0;
+  for (let p = 0; p < 12; p++) { chroma[p] += 0.15 * (raw[p] - chroma[p]); tot += chroma[p]; mx = Math.max(mx, chroma[p]); }
+  confidence = tot > 1e-7 && energy > 0.004 ? mx / (tot / 12) : 0;
+  if (cmagsum > 1e-7) {
+    const oct = Math.log2((csum / cmagsum) / 130.81) / 1;     // octaves above C3
+    centroidOct += 0.1 * (Math.min(3, Math.max(0, oct)) - centroidOct);
+  }
+}
+function dominantIndex() {
+  let p = 0;
+  for (let i = 1; i < 12; i++) if (chroma[i] > chroma[p]) p = i;
+  const octave = Math.min(2, Math.max(0, Math.round(centroidOct - 0.5)));
+  return Math.min(HELIX.length - 1, 12 * octave + p);
+}
+
+// ---------- idle drift: the sea never dies -------------------------------
+const lcg = seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+const idleRand = lcg(20260804);
+let idleWalk = 18;
+function idleStep() {
+  const r = idleRand();
+  idleWalk += r < 0.4 ? 1 : r < 0.8 ? -1 : r < 0.9 ? 2 : -2;
+  idleWalk = Math.min(HELIX.length - 1, Math.max(0, idleWalk));
+  return idleWalk;
+}
+
+// ---------- waves: each born at the horizon in the music's colour ----------
+const TAU = 2 * Math.PI, D_MIN = 0.2, RATE = 1.15, D_MAX = 42.6 * 0.5 + D_MIN;
+const bandNote = new Map();                // wave index -> helix index at birth
+function noteFor(m) {
+  if (!bandNote.has(m)) {
+    bandNote.set(m, confidence > 1.6 ? dominantIndex() : idleStep());
+    if (bandNote.size > 40) bandNote.delete(bandNote.keys().next().value);
+  }
+  return bandNote.get(m);
+}
+
+const MIX = [0.12, 0.22, 0.36, 0.60];
+const cache = new Map();
+function stylesFor(m) {
+  let s = cache.get(m);
+  if (s) return s;
+  const [r, g, b] = hexRgb(HELIX[noteFor(m)].hex);
+  s = MIX.map(f => `rgba(${Math.round(r + (255 - r) * f)},${
+    Math.round(g + (255 - g) * f)},${Math.round(b + (255 - b) * f)},0.7)`);
+  cache.set(m, s);
+  if (cache.size > 24) cache.delete(cache.keys().next().value);
+  return s;
+}
+
+const canvas = document.getElementById("sea");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, HORIZON = 0, SHORE = 0, N = 0;
+let SU, SY, SJ;
+const geoRand = lcg(97531);
+function resize(w, h) {
+  W = canvas.width = w; H = canvas.height = h;
+  HORIZON = 0.05 * H; SHORE = 0.985 * H;
+  N = Math.max(9000, Math.min(48000, Math.round(W * H / 45)));
+  SU = new Float32Array(N); SY = new Float32Array(N); SJ = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    SU[i] = (i * 0.618033988749895) % 1;
+    SY[i] = (i / N) * 42.6 + (geoRand() - 0.5) * 0.9;
+    SJ[i] = geoRand() * 2 - 1;
+  }
+}
+resize(window.innerWidth, window.innerHeight);
+window.addEventListener("resize", () => resize(window.innerWidth, window.innerHeight));
+
+let t = 0, prev = null, foamT = -1e9, loud = 0;
+
+function draw() {
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "lighter";
+
+  // instant response: the waterline sheen wears the music's colour NOW
+  if (confidence > 1.6) {
+    const [r, g, b] = hexRgb(HELIX[dominantIndex()].hex);
+    const sheen = ctx.createLinearGradient(0, SHORE - 0.12 * H, 0, SHORE);
+    sheen.addColorStop(0, "rgba(0,0,0,0)");
+    sheen.addColorStop(1, `rgba(${r},${g},${b},${Math.min(0.22, 0.05 + loud * 1.4)})`);
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, SHORE - 0.12 * H, W, 0.12 * H);
+  }
+
+  const foam = Math.exp(-(t - foamT) / 1.4);
+  const amp = 0.7 + 2.6 * loud;            // loudness lifts the whole swell
+  let last = null;
+  for (let i = 0; i < N; i++) {
+    const y = SY[i], u = SU[i];
+    const c = y * 0.5 + D_MIN + t + 0.4 * Math.sin(u * TAU + y * 0.3);
+    const cr = 0.5 + 0.5 * Math.cos(c);
+    const swell = (7 + 26 * Math.exp(-y / 10)) * (0.3 * cr + 0.7 * cr * cr * cr) * amp;
+    const ripple = 3 * Math.sin(0.8 * y - t + 2.5 * Math.sin(TAU * u + y * 0.15))
+                 + 1.6 * Math.sin(2.7 * y + 0.8 * t + 5 * TAU * u);
+    const pp = Math.pow(y / 42.6, 0.8);
+    const px = u * W + 4 * Math.sin(y * 2 + 0.5 * t + TAU * u);
+    const py = SHORE - (SHORE - HORIZON) * pp - swell * (H / 640) + ripple + 1.5 * SJ[i];
+    const m = Math.max(0, Math.floor((y * 0.5 + D_MIN + t) / TAU));
+    let lvl = cr > 0.85 ? 3 : cr > 0.62 ? 2 : cr > 0.38 ? 1 : 0;
+    if (y < 1.8 && foam > 0.12) lvl = Math.min(3, lvl + (foam > 0.45 ? 2 : 1));
+    const style = stylesFor(m)[lvl];
+    if (style !== last) { ctx.fillStyle = style; last = style; }
+    const s = (2.8 - 1.4 * pp) * Math.max(0.9, H / 900);
+    ctx.fillRect(px, py, s, s);
+  }
+  ctx.globalCompositeOperation = "source-over";
+}
+
+// ---------- loop -----------------------------------------------------------
+const hud = document.getElementById("hud");
+const noteEl = document.getElementById("note");
+const stateEl = document.getElementById("state");
+
+function frame(ms) {
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+  listen();
+  loud += 0.12 * (Math.min(1, energy * 6) - loud);
+  t += RATE * (0.85 + 0.5 * loud) * dt;    // the sea quickens with the room
+  if (listening && onsetFlux > 2.2 && t - foamT > 0.8) foamT = t;   // onsets break foam
+  const jNow = Math.max(0, Math.floor((t + D_MIN) / TAU));
+  if (!listening && jNow >= 1) {           // idle waves still break quietly
+    const tj = TAU * jNow - D_MIN;
+    if (t - tj < 0.05) foamT = t;
+  }
+  const cur = HELIX[noteFor(jNow)];
+  const [r, g, b] = hexRgb(cur.hex);
+  noteEl.innerHTML = `<span style="color:rgb(${r},${g},${b})">&#9679;</span> ${
+    listening && confidence > 1.6 ? HELIX[dominantIndex()].note : cur.note}`;
+  draw();
+  requestAnimationFrame(frame);
+}
+
+document.getElementById("mic").addEventListener("click", () =>
+  startMic().catch(e => { stateEl.textContent = "microphone unavailable — " + String(e.name || e).toLowerCase(); }));
+document.getElementById("file").addEventListener("click", () => document.getElementById("filepick").click());
+document.getElementById("filepick").addEventListener("change", ev => {
+  if (ev.target.files[0]) startFile(ev.target.files[0]);
+});
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => {
+  e.preventDefault();
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f && f.type.startsWith("audio")) startFile(f);
+});
+
+let restTimer = null;
+function wake() {
+  hud.classList.remove("rest");
+  clearTimeout(restTimer);
+  restTimer = setTimeout(() => hud.classList.add("rest"), 5000);
+}
+window.addEventListener("pointermove", wake);
+wake();
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

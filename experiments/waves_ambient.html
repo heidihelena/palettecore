@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>waves to the shore — ambient</title>
+<!--
+  Waves to the shore — ambient variant.
+
+  Fullscreen, end to end, no driftwood, almost no text: the sea alone, as
+  background sound-and-colour for studying. Each incoming wave carries one
+  note of the palettecore pitch-colour helix (hue = pitch class, lightness =
+  pitch); its colour rolls in with the crest and its tone sounds as the wave
+  breaks. Click anywhere for sound. The interface fades away when the
+  pointer rests.
+
+  Colours are the C-D-G-A ladder generated and audited by
+  experiments/waves_to_shore.py (see output/waves_to_shore.json for the
+  audit; the full piece with the driftwood control and the CVD toggles is
+  experiments/waves_to_shore.html).
+
+  Typography: Nudica / Nudica Italic (Atipo Foundry). The @font-face rules
+  below point at site-relative paths — adjust them to wherever the host
+  site keeps its licensed Nudica files. The stack falls back to a system
+  geometric sans, so the page needs no font files to run.
+
+  window.__frame(t) renders the scene at sim time t deterministically
+  (the note walk uses its own seeded PRNG), which is what the video
+  recording pipeline drives.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica";
+    src: url("/fonts/nudica-light.woff2") format("woff2");
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Nudica";
+    src: url("/fonts/nudica-lightitalic.woff2") format("woff2");
+    font-weight: 300; font-style: italic; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #000; overflow: hidden; cursor: default; }
+  canvas { position: fixed; inset: 0; display: block; }
+  #hud {
+    position: fixed; inset: 0; pointer-events: none;
+    font-family: "Nudica", "Avenir Next", "Futura", system-ui, sans-serif;
+    font-weight: 300; color: #cfc9c2;
+    transition: opacity 1.6s ease; opacity: 1;
+  }
+  #hud.rest { opacity: 0; }
+  #title {
+    position: absolute; top: 22px; left: 26px;
+    font-style: italic; font-size: 17px; letter-spacing: .04em;
+  }
+  #sub {
+    position: absolute; top: 46px; left: 26px;
+    font-size: 11.5px; letter-spacing: .10em; opacity: .55;
+    text-transform: lowercase; pointer-events: auto;
+  }
+  #sub a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(207,201,194,.35); }
+  #note {
+    position: absolute; right: 26px; bottom: 22px;
+    font-size: 12px; letter-spacing: .12em; opacity: .8;
+  }
+  #hint {
+    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    font-size: 11.5px; letter-spacing: .22em; opacity: .45;
+    text-transform: lowercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="sea"></canvas>
+<div id="hud">
+  <div id="title">waves to the shore</div>
+  <div id="sub">does music have a colour? &middot;
+    <a href="https://github.com/heidihelena/palettecore" target="_blank" rel="noopener">palettecore</a></div>
+  <div id="note"></div>
+  <div id="hint">click for sound</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+// The C-D-G-A ladder over C3..C6 from the palettecore pitch-colour helix,
+// generated + audited by experiments/waves_to_shore.py (waves_to_shore.json).
+const LADDER = [
+  { note: "C3", f: 130.81, hex: "#41232D" },
+  { note: "D3", f: 146.83, hex: "#443414" },
+  { note: "G3", f: 196.00, hex: "#215947" },
+  { note: "A3", f: 220.00, hex: "#3B587E" },
+  { note: "C4", f: 261.63, hex: "#8A5163" },
+  { note: "D4", f: 293.67, hex: "#886A30" },
+  { note: "G4", f: 392.00, hex: "#409B7E" },
+  { note: "A4", f: 440.00, hex: "#6795D1" },
+  { note: "C5", f: 523.25, hex: "#DB84A0" },
+  { note: "D5", f: 587.33, hex: "#D3A54F" },
+  { note: "G5", f: 783.99, hex: "#97D9C0" },
+  { note: "A5", f: 880.00, hex: "#BAD6FB" },
+  { note: "C6", f: 1046.50, hex: "#FADBE3" },
+];
+
+// ---------- the note walk: its own PRNG, so audio can be reproduced --------
+const lcg = seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+const walkRand = lcg(20260803);
+const noteOfWave = [];
+let walk = 6;
+function noteFor(j) {
+  while (noteOfWave.length <= j) {
+    const r = walkRand();
+    const step = r < 0.34 ? 1 : r < 0.62 ? -1 : r < 0.77 ? 2 : r < 0.88 ? -2
+               : r < 0.94 ? 4 : -4;
+    const hi = LADDER.length - 1;
+    walk += step;
+    if (walk < 0) walk = -walk;
+    if (walk > hi) walk = 2 * hi - walk;
+    walk = Math.min(hi, Math.max(0, walk));
+    noteOfWave.push(walk);
+  }
+  return noteOfWave[Math.max(0, j)];
+}
+
+// ---------- colour cache ---------------------------------------------------
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const MIX = [0.12, 0.22, 0.36, 0.60];
+const cache = new Map();
+function stylesFor(m) {
+  let s = cache.get(m);
+  if (s) return s;
+  const [r, g, b] = hexRgb(LADDER[noteFor(m)].hex);
+  s = MIX.map(f => `rgba(${Math.round(r + (255 - r) * f)},${
+    Math.round(g + (255 - g) * f)},${Math.round(b + (255 - b) * f)},0.7)`);
+  cache.set(m, s);
+  if (cache.size > 24) cache.delete(cache.keys().next().value);
+  return s;
+}
+
+// ---------- the sea, end to end --------------------------------------------
+const TAU = 2 * Math.PI, D_MIN = 0.2, RATE = 1.15;
+const canvas = document.getElementById("sea");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, HORIZON = 0, SHORE = 0, N = 0;
+let SU, SY, SJ;
+const geoRand = lcg(97531);
+function resize(w, h) {
+  W = canvas.width = w; H = canvas.height = h;
+  HORIZON = 0.05 * H; SHORE = 0.985 * H;
+  N = Math.max(9000, Math.min(48000, Math.round(W * H / 45)));
+  SU = new Float32Array(N); SY = new Float32Array(N); SJ = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    SU[i] = (i * 0.618033988749895) % 1;
+    SY[i] = (i / N) * 42.6 + (geoRand() - 0.5) * 0.9;
+    SJ[i] = geoRand() * 2 - 1;
+  }
+}
+resize(window.innerWidth, window.innerHeight);
+window.addEventListener("resize", () => resize(window.innerWidth, window.innerHeight));
+
+function draw(t) {
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "lighter";
+  const jNow = Math.floor((t + D_MIN) / TAU);
+  const foam = jNow >= 1 ? Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4) : 0;
+  let last = null;
+  for (let i = 0; i < N; i++) {
+    const y = SY[i], u = SU[i];
+    const c = y * 0.5 + D_MIN + t + 0.4 * Math.sin(u * TAU + y * 0.3);
+    const cr = 0.5 + 0.5 * Math.cos(c);
+    const swell = (7 + 26 * Math.exp(-y / 10)) * (0.3 * cr + 0.7 * cr * cr * cr);
+    const ripple = 3 * Math.sin(0.8 * y - t + 2.5 * Math.sin(TAU * u + y * 0.15))
+                 + 1.6 * Math.sin(2.7 * y + 0.8 * t + 5 * TAU * u);
+    const pp = Math.pow(y / 42.6, 0.8);
+    const px = u * W + 4 * Math.sin(y * 2 + 0.5 * t + TAU * u);
+    const py = SHORE - (SHORE - HORIZON) * pp - swell * (H / 640) + ripple + 1.5 * SJ[i];
+    const m = Math.max(0, Math.floor((y * 0.5 + D_MIN + t) / TAU));
+    let lvl = cr > 0.85 ? 3 : cr > 0.62 ? 2 : cr > 0.38 ? 1 : 0;
+    if (y < 1.8 && foam > 0.12) lvl = Math.min(3, lvl + (foam > 0.45 ? 2 : 1));
+    const style = stylesFor(m)[lvl];
+    if (style !== last) { ctx.fillStyle = style; last = style; }
+    const s = (2.8 - 1.4 * pp) * Math.max(0.9, H / 900);
+    ctx.fillRect(px, py, s, s);
+  }
+  ctx.globalCompositeOperation = "source-over";
+}
+
+// ---------- sound ----------------------------------------------------------
+let ac = null, master = null, noiseBuf = null;
+function audioInit() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = 0.8; master.connect(ac.destination);
+  noiseBuf = ac.createBuffer(1, 4 * ac.sampleRate, ac.sampleRate);
+  const ch = noiseBuf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  const bed = ac.createBufferSource(); bed.buffer = noiseBuf; bed.loop = true;
+  const bedF = ac.createBiquadFilter(); bedF.type = "lowpass"; bedF.frequency.value = 240;
+  const bedG = ac.createGain(); bedG.gain.value = 0.014;
+  bed.connect(bedF).connect(bedG).connect(master); bed.start();
+}
+function playNote(entry, when) {
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(0.09, when + 1.2);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 5.5);
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass";
+  lp.frequency.value = Math.min(2400, entry.f * 4);
+  for (const [type, det] of [["sine", 0], ["triangle", 2.5]]) {
+    const o = ac.createOscillator(); o.type = type;
+    o.frequency.value = entry.f; o.detune.value = det;
+    o.connect(lp); o.start(when); o.stop(when + 6);
+  }
+  lp.connect(g).connect(master);
+  const br = ac.createBufferSource(); br.buffer = noiseBuf;
+  const bf = ac.createBiquadFilter(); bf.type = "bandpass";
+  bf.frequency.value = 700; bf.Q.value = 0.6;
+  const bg = ac.createGain();
+  bg.gain.setValueAtTime(0.0001, when);
+  bg.gain.exponentialRampToValueAtTime(0.05, when + 0.25);
+  bg.gain.exponentialRampToValueAtTime(0.0001, when + 2.8);
+  br.connect(bf).connect(bg).connect(master);
+  br.start(when, Math.random() * 1.5); br.stop(when + 3);
+}
+
+// ---------- live loop ------------------------------------------------------
+const hud = document.getElementById("hud");
+const noteEl = document.getElementById("note");
+const hintEl = document.getElementById("hint");
+let t = 0, playing = true, sound = false, scheduledJ = -1, prev = null;
+let recording = false;                     // set by __frame; stops the live loop
+
+function updateNote() {
+  const jNow = Math.floor((t + D_MIN) / TAU);
+  const e = LADDER[noteFor(Math.max(0, jNow))];
+  const [r, g, b] = hexRgb(e.hex);
+  noteEl.innerHTML = `<span style="color:rgb(${r},${g},${b})">&#9679;</span> ${e.note}`;
+}
+
+function frame(ms) {
+  if (recording) return;
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+  if (playing) t += RATE * dt;
+  if (sound && ac) {
+    const jNext = Math.floor((t + D_MIN) / TAU) + 1;
+    const tArr = TAU * jNext - D_MIN;
+    if (jNext > scheduledJ && (tArr - t) / RATE < 0.5) {
+      playNote(LADDER[noteFor(jNext)], ac.currentTime + Math.max(0, (tArr - t) / RATE));
+      scheduledJ = jNext;
+    }
+  }
+  updateNote();
+  draw(t);
+  requestAnimationFrame(frame);
+}
+
+document.body.addEventListener("click", () => {
+  if (!ac) { audioInit(); sound = true; hintEl.style.display = "none"; }
+  else if (ac.state === "suspended") { ac.resume(); sound = true; }
+  else { sound = !sound; master.gain.value = sound ? 0.8 : 0; }
+});
+
+// the interface rests when the pointer does
+let restTimer = null;
+function wake() {
+  hud.classList.remove("rest");
+  clearTimeout(restTimer);
+  restTimer = setTimeout(() => hud.classList.add("rest"), 4000);
+}
+window.addEventListener("pointermove", wake);
+wake();
+
+// deterministic single-frame render for the recording pipeline
+window.__frame = simT => { recording = true; t = simT; updateNote(); draw(simT); };
+window.__resize = (w, h) => resize(w, h);
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -268,8 +268,10 @@ function draw(t) {
     ctx.fillRect(0, SHORE - 0.12 * H, W, 0.12 * H);
   }
 
+  // wave j breaks at t = TAU*j - D_MIN; j = 0 breaks just before t = 0, which
+  // keeps the foam periodic — the loop seam at t = 20*pi depends on this
   const jNow = Math.floor((t + D_MIN) / TAU);
-  const arrival = jNow >= 1 ? Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4) : 0;
+  const arrival = Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4);
   const foam = Math.max(arrival, Math.exp(-(t - foamT) / 1.4));
   const amp = (listening || weMode) ? 0.7 + 2.6 * loud : 1;
   let last = null;

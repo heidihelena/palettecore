@@ -186,3 +186,30 @@ collapses under every simulation exactly as the helix audit predicts — in the
 piece you can watch it happen. The pitch-class → hue mapping remains a
 designed convention, and sound stays the binding encoding; the colour is an
 enhancer, which is the point of the driftwood.
+
+### waves_ambient.html — fullscreen, for studying
+
+The same sea, edge to edge: no driftwood, almost no text, an interface that
+fades when the pointer rests. Click anywhere for sound. Built to be embedded
+on a host site as background sound-and-colour (typography hooks for
+Nudica/Nudica Italic with a system fallback; colours are the audited C-D-G-A
+ladder, embedded with provenance). `window.__frame(t)` renders any sim time
+deterministically — the note walk has its own seeded PRNG — so a recording
+pipeline can produce frame-exact video with a sample-accurate, separately
+synthesized soundtrack.
+
+### waves_live.html — the sea listens (interactive, for shared spaces)
+
+The reactive variant: microphone or a dropped audio file feeds an analyser,
+and **each wave is born at the horizon wearing the colour of the music at
+that moment** — dominant pitch class (folded chromagram, ~65–2100 Hz) sets
+the hue, spectral-centroid register sets the lightness, on the full 12-class
+helix. A wave takes about half a minute to reach the shore, so the screen
+holds the last few phrases of the song. Loudness drives the swell, onsets
+flash the foam, the waterline sheen follows the music instantly, and when
+the room goes quiet the sea idles on a slow note walk instead of dying.
+Audio stays in the analyser node — nothing is recorded or sent anywhere.
+
+Same caveat as everywhere above: this uses the 12-class code, which is *not*
+distinguishable under simulated CVD; it is art for a wall, not an accessible
+encoding.

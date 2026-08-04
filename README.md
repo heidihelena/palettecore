@@ -223,6 +223,15 @@ simulations; that floor is not a human-validated guarantee. The colours can
 enrich the shared artwork, but they do not replace sound, labels, position, or
 another redundant encoding.
 
+The experiment now has an artwork: **waves to the shore**
+(`experiments/waves_to_shore.html`, no dependencies — open it and press play).
+Each incoming wave carries one note whose helix colour rolls in with the crest
+and sounds as the wave breaks; the beached driftwood — a point-for-point
+rendering of the 10 000-point tweet-art study popularised by @yuruyurau — has
+no pitch, so it takes no colour. Its palette is injected from this engine by
+`experiments/waves_to_shore.py` together with its audit, and in-piece toggles
+let you watch the 12-semitone code collapse under the simulated dichromacies.
+
 ## Roadmap
 
 - [x] PyPI packaging (`pip install palettecore`)

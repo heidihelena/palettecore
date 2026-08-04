@@ -142,3 +142,47 @@ for this tested span. Pentatonic (5) comes close (worst-CVD 4.0).
 This mirrors the palette result: normal vision tolerates more categories than
 a CVD viewer. Here, with lightness already spent on pitch height, the CVD
 budget for pitch class is about four distinct hues under the package defaults.
+
+## waves_to_shore.html — the artwork (waves to the shore)
+
+The findings above, staged as a piece you can watch and hear. A 14 000-point
+sea rolls toward a shore; each incoming wave carries one note, coloured by the
+helix model (hue = pitch class, lightness = pitch); the colour arrives with
+the crest and the tone sounds the moment the wave breaks. The driftwood on the
+sand is the 10 000-point tweet-art study popularised by @yuruyurau, rendered
+point for point and beached as the control: it has no pitch, so it takes no
+colour from the mapping.
+
+```
+PYTHONPATH=.:experiments python3 experiments/waves_to_shore.py   # palette + audit + inject
+open experiments/waves_to_shore.html                             # then press play
+```
+
+The piece is self-contained (canvas + WebAudio, no dependencies). Its colours
+and the Machado matrices are **injected** by `waves_to_shore.py` from the
+palettecore engine — the artwork cannot drift from the audit, which lands in
+`output/waves_to_shore.json` (a still is in `output/waves_to_shore.png`). Two
+toggles put the experiments' findings on stage: a vision menu applies the
+Machado dichromacy simulations to the whole scene, and a scale menu switches
+between the default ladder (4 pitch classes per octave — C, D, G, A over
+C3..C6) and the full 12-semitone helix, whose colour code visibly collapses
+under the simulations.
+
+Audit of the shipping ladders, minimum ΔE (floor 6, package design rule):
+
+| Vision | ladder4 adj min | ladder4 pairwise min | ladder12 adj min | ladder12 pairwise min |
+|---|---|---|---|---|
+| normal | 23.2 | 18.7 | 6.5 | 6.5 |
+| protanopia | 11.4 | 10.5 | 0.7 | 0.7 |
+| deuteranopia | 14.2 | 7.0 | 1.6 | 1.6 |
+| tritanopia | **5.8** | **5.8** | 1.9 | 1.9 |
+
+Honest notes: the 4-class ladder does **not** fully clear the floor — its
+C3→D3 step measures 5.8 under simulated tritanopia, just below 6, so the UI
+says "near the audited floor", not "clears". (The frontier's clean result used
+equal divisions of the octave; the musical C-D-G-A set trades a little ΔE for
+consonance, and the audit reports what it costs.) The 12-semitone ladder
+collapses under every simulation exactly as the helix audit predicts — in the
+piece you can watch it happen. The pitch-class → hue mapping remains a
+designed convention, and sound stays the binding encoding; the colour is an
+enhancer, which is the point of the driftwood.

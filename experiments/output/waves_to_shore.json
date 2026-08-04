@@ -1,0 +1,470 @@
+{
+  "model": "pitch-colour helix (angle = pitch class on a closed dE-spaced hue ring, height = lightness = absolute pitch), audited on the exact colours the artwork displays",
+  "floor": 6.0,
+  "ladder4": [
+    {
+      "note": "C3",
+      "pc": "C",
+      "f": 130.81,
+      "L": 0.3,
+      "hue": 0.0,
+      "hex": "#41232D"
+    },
+    {
+      "note": "D3",
+      "pc": "D",
+      "f": 146.83,
+      "L": 0.334,
+      "hue": 81.5,
+      "hex": "#443414"
+    },
+    {
+      "note": "G3",
+      "pc": "G",
+      "f": 196.0,
+      "L": 0.421,
+      "hue": 169.0,
+      "hex": "#215947"
+    },
+    {
+      "note": "A3",
+      "pc": "A",
+      "f": 220.0,
+      "L": 0.455,
+      "hue": 255.5,
+      "hex": "#3B587E"
+    },
+    {
+      "note": "C4",
+      "pc": "C",
+      "f": 261.63,
+      "L": 0.507,
+      "hue": 0.0,
+      "hex": "#8A5163"
+    },
+    {
+      "note": "D4",
+      "pc": "D",
+      "f": 293.67,
+      "L": 0.541,
+      "hue": 81.5,
+      "hex": "#886A30"
+    },
+    {
+      "note": "G4",
+      "pc": "G",
+      "f": 392.0,
+      "L": 0.627,
+      "hue": 169.0,
+      "hex": "#409B7E"
+    },
+    {
+      "note": "A4",
+      "pc": "A",
+      "f": 440.0,
+      "L": 0.662,
+      "hue": 255.5,
+      "hex": "#6795D1"
+    },
+    {
+      "note": "C5",
+      "pc": "C",
+      "f": 523.25,
+      "L": 0.713,
+      "hue": 0.0,
+      "hex": "#DB84A0"
+    },
+    {
+      "note": "D5",
+      "pc": "D",
+      "f": 587.33,
+      "L": 0.748,
+      "hue": 81.5,
+      "hex": "#D3A54F"
+    },
+    {
+      "note": "G5",
+      "pc": "G",
+      "f": 783.99,
+      "L": 0.834,
+      "hue": 169.0,
+      "hex": "#97D9C0"
+    },
+    {
+      "note": "A5",
+      "pc": "A",
+      "f": 880.0,
+      "L": 0.868,
+      "hue": 255.5,
+      "hex": "#BAD6FB"
+    },
+    {
+      "note": "C6",
+      "pc": "C",
+      "f": 1046.5,
+      "L": 0.92,
+      "hue": 0.0,
+      "hex": "#FADBE3"
+    }
+  ],
+  "ladder12": [
+    {
+      "note": "C3",
+      "pc": "C",
+      "f": 130.81,
+      "L": 0.32,
+      "hue": 0.0,
+      "hex": "#482832"
+    },
+    {
+      "note": "C#3",
+      "pc": "C#",
+      "f": 138.59,
+      "L": 0.337,
+      "hue": 28.0,
+      "hex": "#4F2C28"
+    },
+    {
+      "note": "D3",
+      "pc": "D",
+      "f": 146.83,
+      "L": 0.353,
+      "hue": 53.8,
+      "hex": "#52331E"
+    },
+    {
+      "note": "D#3",
+      "pc": "D#",
+      "f": 155.56,
+      "L": 0.37,
+      "hue": 81.2,
+      "hex": "#4F3C19"
+    },
+    {
+      "note": "E3",
+      "pc": "E",
+      "f": 164.81,
+      "L": 0.387,
+      "hue": 108.8,
+      "hex": "#47471E"
+    },
+    {
+      "note": "F3",
+      "pc": "F",
+      "f": 174.61,
+      "L": 0.403,
+      "hue": 137.2,
+      "hex": "#38512E"
+    },
+    {
+      "note": "F#3",
+      "pc": "F#",
+      "f": 185.0,
+      "L": 0.42,
+      "hue": 168.8,
+      "hex": "#225947"
+    },
+    {
+      "note": "G3",
+      "pc": "G",
+      "f": 196.0,
+      "L": 0.437,
+      "hue": 197.2,
+      "hex": "#135D5F"
+    },
+    {
+      "note": "G#3",
+      "pc": "G#",
+      "f": 207.65,
+      "L": 0.453,
+      "hue": 225.0,
+      "hex": "#215E74"
+    },
+    {
+      "note": "A3",
+      "pc": "A",
+      "f": 220.0,
+      "L": 0.47,
+      "hue": 255.8,
+      "hex": "#3E5C84"
+    },
+    {
+      "note": "A#3",
+      "pc": "A#",
+      "f": 233.08,
+      "L": 0.487,
+      "hue": 288.2,
+      "hex": "#5D5888"
+    },
+    {
+      "note": "B3",
+      "pc": "B",
+      "f": 246.94,
+      "L": 0.503,
+      "hue": 324.5,
+      "hex": "#7B547D"
+    },
+    {
+      "note": "C4",
+      "pc": "C",
+      "f": 261.63,
+      "L": 0.52,
+      "hue": 0.0,
+      "hex": "#8F5467"
+    },
+    {
+      "note": "C#4",
+      "pc": "C#",
+      "f": 277.18,
+      "L": 0.537,
+      "hue": 28.0,
+      "hex": "#995A52"
+    },
+    {
+      "note": "D4",
+      "pc": "D",
+      "f": 293.67,
+      "L": 0.553,
+      "hue": 53.8,
+      "hex": "#9A6440"
+    },
+    {
+      "note": "D#4",
+      "pc": "D#",
+      "f": 311.13,
+      "L": 0.57,
+      "hue": 81.2,
+      "hex": "#927234"
+    },
+    {
+      "note": "E4",
+      "pc": "E",
+      "f": 329.63,
+      "L": 0.587,
+      "hue": 108.8,
+      "hex": "#81813B"
+    },
+    {
+      "note": "F4",
+      "pc": "F",
+      "f": 349.23,
+      "L": 0.603,
+      "hue": 137.2,
+      "hex": "#668E55"
+    },
+    {
+      "note": "F#4",
+      "pc": "F#",
+      "f": 370.0,
+      "L": 0.62,
+      "hue": 168.8,
+      "hex": "#3F997C"
+    },
+    {
+      "note": "G4",
+      "pc": "G",
+      "f": 392.0,
+      "L": 0.637,
+      "hue": 197.2,
+      "hex": "#269DA0"
+    },
+    {
+      "note": "G#4",
+      "pc": "G#",
+      "f": 415.31,
+      "L": 0.653,
+      "hue": 225.0,
+      "hex": "#3C9DBF"
+    },
+    {
+      "note": "A4",
+      "pc": "A",
+      "f": 440.0,
+      "L": 0.67,
+      "hue": 255.8,
+      "hex": "#6997D5"
+    },
+    {
+      "note": "A#4",
+      "pc": "A#",
+      "f": 466.16,
+      "L": 0.687,
+      "hue": 288.2,
+      "hex": "#978FD9"
+    },
+    {
+      "note": "B4",
+      "pc": "B",
+      "f": 493.88,
+      "L": 0.703,
+      "hue": 324.5,
+      "hex": "#C287C6"
+    },
+    {
+      "note": "C5",
+      "pc": "C",
+      "f": 523.25,
+      "L": 0.72,
+      "hue": 0.0,
+      "hex": "#DE86A2"
+    },
+    {
+      "note": "C#5",
+      "pc": "C#",
+      "f": 554.37,
+      "L": 0.737,
+      "hue": 28.0,
+      "hex": "#E98D81"
+    },
+    {
+      "note": "D5",
+      "pc": "D",
+      "f": 587.33,
+      "L": 0.753,
+      "hue": 53.8,
+      "hex": "#E89A66"
+    },
+    {
+      "note": "D#5",
+      "pc": "D#",
+      "f": 622.26,
+      "L": 0.77,
+      "hue": 81.2,
+      "hex": "#D7AD60"
+    },
+    {
+      "note": "E5",
+      "pc": "E",
+      "f": 659.26,
+      "L": 0.787,
+      "hue": 108.8,
+      "hex": "#BEBF72"
+    },
+    {
+      "note": "F5",
+      "pc": "F",
+      "f": 698.46,
+      "L": 0.803,
+      "hue": 137.2,
+      "hex": "#A3CD93"
+    },
+    {
+      "note": "F#5",
+      "pc": "F#",
+      "f": 739.99,
+      "L": 0.82,
+      "hue": 168.8,
+      "hex": "#8ED6BB"
+    },
+    {
+      "note": "G5",
+      "pc": "G",
+      "f": 783.99,
+      "L": 0.837,
+      "hue": 197.2,
+      "hex": "#8ED9DA"
+    },
+    {
+      "note": "G#5",
+      "pc": "G#",
+      "f": 830.61,
+      "L": 0.853,
+      "hue": 225.0,
+      "hex": "#A0D9F0"
+    },
+    {
+      "note": "A5",
+      "pc": "A",
+      "f": 880.0,
+      "L": 0.87,
+      "hue": 255.8,
+      "hex": "#BCD7FB"
+    },
+    {
+      "note": "A#5",
+      "pc": "A#",
+      "f": 932.33,
+      "L": 0.887,
+      "hue": 288.2,
+      "hex": "#D7D5FA"
+    },
+    {
+      "note": "B5",
+      "pc": "B",
+      "f": 987.77,
+      "L": 0.903,
+      "hue": 324.5,
+      "hex": "#EED6EF"
+    },
+    {
+      "note": "C6",
+      "pc": "C",
+      "f": 1046.5,
+      "L": 0.92,
+      "hue": 0.0,
+      "hex": "#FADBE3"
+    }
+  ],
+  "audit": {
+    "ladder4": {
+      "normal": {
+        "adjacent_min": 23.2,
+        "adjacent_below_floor": 0,
+        "adjacent_steps": 12,
+        "worst_adjacent": "A5->C6",
+        "pairwise_min": 18.7
+      },
+      "protanopia": {
+        "adjacent_min": 11.4,
+        "adjacent_below_floor": 0,
+        "adjacent_steps": 12,
+        "worst_adjacent": "A3->C4",
+        "pairwise_min": 10.5
+      },
+      "deuteranopia": {
+        "adjacent_min": 14.2,
+        "adjacent_below_floor": 0,
+        "adjacent_steps": 12,
+        "worst_adjacent": "D3->G3",
+        "pairwise_min": 7.0
+      },
+      "tritanopia": {
+        "adjacent_min": 5.8,
+        "adjacent_below_floor": 1,
+        "adjacent_steps": 12,
+        "worst_adjacent": "C3->D3",
+        "pairwise_min": 5.8
+      }
+    },
+    "ladder12": {
+      "normal": {
+        "adjacent_min": 6.5,
+        "adjacent_below_floor": 0,
+        "adjacent_steps": 36,
+        "worst_adjacent": "B5->C6",
+        "pairwise_min": 6.5
+      },
+      "protanopia": {
+        "adjacent_min": 0.7,
+        "adjacent_below_floor": 17,
+        "adjacent_steps": 36,
+        "worst_adjacent": "A5->A#5",
+        "pairwise_min": 0.7
+      },
+      "deuteranopia": {
+        "adjacent_min": 1.6,
+        "adjacent_below_floor": 16,
+        "adjacent_steps": 36,
+        "worst_adjacent": "D#3->E3",
+        "pairwise_min": 1.6
+      },
+      "tritanopia": {
+        "adjacent_min": 1.9,
+        "adjacent_below_floor": 17,
+        "adjacent_steps": 36,
+        "worst_adjacent": "C#3->D3",
+        "pairwise_min": 1.9
+      }
+    }
+  }
+}

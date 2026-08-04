@@ -213,3 +213,14 @@ Audio stays in the analyser node — nothing is recorded or sent anywhere.
 Same caveat as everywhere above: this uses the 12-class code, which is *not*
 distinguishable under simulated CVD; it is art for a wall, not an accessible
 encoding.
+
+### waves_screensaver.html — the sea as a screensaver
+
+Silent, controls-free, cursor hidden, runs forever on the generative note
+walk; a credit line breathes in for eight seconds every five minutes. Works
+with any web-page screensaver wrapper (WebViewScreenSaver on macOS,
+web-page-screensaver on Windows, a kiosk browser on Linux) — instructions in
+the file header. `window.__loop(10)` pins a 10-wave note cycle so that every
+animation frequency completes an integer number of cycles at sim t = 20π,
+which is how the distributable seamless ~55 s loop video is rendered
+(`window.__frame(t)` as in the ambient variant).

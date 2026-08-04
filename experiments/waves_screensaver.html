@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>waves to the shore — screensaver</title>
+<!--
+  Waves to the shore — screensaver build.
+
+  Silent, controls-free, runs forever: the sea alone. Each wave carries one
+  note-colour of the palettecore pitch-colour helix (the audited C-D-G-A
+  ladder from experiments/waves_to_shore.py); a small credit line breathes
+  in for a few seconds every five minutes and disappears again.
+
+  Use with any web-page screensaver wrapper:
+    macOS   — WebViewScreenSaver (github.com/liquidx/webviewscreensaver,
+              `brew install --cask webviewscreensaver`), point it at this
+              file or its hosted URL.
+    Windows — web-page-screensaver (github.com/cwc/web-page-screensaver),
+              same idea.
+    Linux   — a fullscreen kiosk browser on idle does the job.
+
+  No sound, no network, no pointer handlers — the wrapper owns wake-up.
+
+  Recording hooks (used to render the seamless loop video):
+    window.__loop(K)  — repeat the first K wave-notes forever; with K = 10
+                        every animation frequency in the piece completes an
+                        integer number of cycles at sim t = 20*pi, so a clip
+                        of exactly that length loops seamlessly.
+    window.__frame(t) — render sim time t deterministically.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica";
+    src: url("/fonts/nudica-lightitalic.woff2") format("woff2");
+    font-weight: 300; font-style: italic; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #000; overflow: hidden; cursor: none; }
+  canvas { position: fixed; inset: 0; display: block; }
+  #credit {
+    position: fixed; right: 28px; bottom: 24px; opacity: 0;
+    font: italic 300 13px "Nudica", "Avenir Next", "Futura", system-ui, sans-serif;
+    letter-spacing: .08em; color: #cfc9c2;
+    transition: opacity 3s ease;
+  }
+</style>
+</head>
+<body>
+<canvas id="sea"></canvas>
+<div id="credit">waves to the shore &middot; vahtian.com &middot; palettecore</div>
+
+<script>
+(() => {
+"use strict";
+
+// The audited C-D-G-A ladder (experiments/waves_to_shore.py).
+const LADDER = [
+  { note: "C3", hex: "#41232D" }, { note: "D3", hex: "#443414" },
+  { note: "G3", hex: "#215947" }, { note: "A3", hex: "#3B587E" },
+  { note: "C4", hex: "#8A5163" }, { note: "D4", hex: "#886A30" },
+  { note: "G4", hex: "#409B7E" }, { note: "A4", hex: "#6795D1" },
+  { note: "C5", hex: "#DB84A0" }, { note: "D5", hex: "#D3A54F" },
+  { note: "G5", hex: "#97D9C0" }, { note: "A5", hex: "#BAD6FB" },
+  { note: "C6", hex: "#FADBE3" },
+];
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+
+const lcg = seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+const walkRand = lcg(20260803);
+const noteOfWave = [];
+let walk = 6, loopK = 0;                   // loopK > 0: repeat first K notes
+function noteFor(j) {
+  j = Math.max(0, j);
+  if (loopK > 0) j = j % loopK;
+  while (noteOfWave.length <= j) {
+    const r = walkRand();
+    const step = r < 0.34 ? 1 : r < 0.62 ? -1 : r < 0.77 ? 2 : r < 0.88 ? -2
+               : r < 0.94 ? 4 : -4;
+    const hi = LADDER.length - 1;
+    walk += step;
+    if (walk < 0) walk = -walk;
+    if (walk > hi) walk = 2 * hi - walk;
+    walk = Math.min(hi, Math.max(0, walk));
+    noteOfWave.push(walk);
+  }
+  return noteOfWave[j];
+}
+
+const MIX = [0.12, 0.22, 0.36, 0.60];
+const cache = new Map();
+function stylesFor(m) {
+  const key = loopK > 0 ? (m % loopK) : m;
+  let s = cache.get(key);
+  if (s) return s;
+  const [r, g, b] = hexRgb(LADDER[noteFor(m)].hex);
+  s = MIX.map(f => `rgba(${Math.round(r + (255 - r) * f)},${
+    Math.round(g + (255 - g) * f)},${Math.round(b + (255 - b) * f)},0.7)`);
+  cache.set(key, s);
+  if (cache.size > 24) cache.delete(cache.keys().next().value);
+  return s;
+}
+
+const TAU = 2 * Math.PI, D_MIN = 0.2, RATE = 1.15;
+const canvas = document.getElementById("sea");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, HORIZON = 0, SHORE = 0, N = 0;
+let SU, SY, SJ;
+const geoRand = lcg(97531);
+function resize(w, h) {
+  W = canvas.width = w; H = canvas.height = h;
+  HORIZON = 0.05 * H; SHORE = 0.985 * H;
+  N = Math.max(9000, Math.min(48000, Math.round(W * H / 45)));
+  SU = new Float32Array(N); SY = new Float32Array(N); SJ = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    SU[i] = (i * 0.618033988749895) % 1;
+    SY[i] = (i / N) * 42.6 + (geoRand() - 0.5) * 0.9;
+    SJ[i] = geoRand() * 2 - 1;
+  }
+}
+resize(window.innerWidth, window.innerHeight);
+window.addEventListener("resize", () => resize(window.innerWidth, window.innerHeight));
+
+function draw(t) {
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "lighter";
+  const jNow = Math.floor((t + D_MIN) / TAU);
+  const foam = jNow >= 1 ? Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4) : 0;
+  let last = null;
+  for (let i = 0; i < N; i++) {
+    const y = SY[i], u = SU[i];
+    const c = y * 0.5 + D_MIN + t + 0.4 * Math.sin(u * TAU + y * 0.3);
+    const cr = 0.5 + 0.5 * Math.cos(c);
+    const swell = (7 + 26 * Math.exp(-y / 10)) * (0.3 * cr + 0.7 * cr * cr * cr);
+    const ripple = 3 * Math.sin(0.8 * y - t + 2.5 * Math.sin(TAU * u + y * 0.15))
+                 + 1.6 * Math.sin(2.7 * y + 0.8 * t + 5 * TAU * u);
+    const pp = Math.pow(y / 42.6, 0.8);
+    const px = u * W + 4 * Math.sin(y * 2 + 0.5 * t + TAU * u);
+    const py = SHORE - (SHORE - HORIZON) * pp - swell * (H / 640) + ripple + 1.5 * SJ[i];
+    const m = Math.max(0, Math.floor((y * 0.5 + D_MIN + t) / TAU));
+    let lvl = cr > 0.85 ? 3 : cr > 0.62 ? 2 : cr > 0.38 ? 1 : 0;
+    if (y < 1.8 && foam > 0.12) lvl = Math.min(3, lvl + (foam > 0.45 ? 2 : 1));
+    const style = stylesFor(m)[lvl];
+    if (style !== last) { ctx.fillStyle = style; last = style; }
+    const s = (2.8 - 1.4 * pp) * Math.max(0.9, H / 900);
+    ctx.fillRect(px, py, s, s);
+  }
+  ctx.globalCompositeOperation = "source-over";
+}
+
+// the credit breathes in for 8 s every 5 minutes, then rests
+const credit = document.getElementById("credit");
+function breathe(ms) {
+  const cycle = (ms / 1000) % 300;
+  credit.style.opacity = cycle > 290 && cycle < 298 ? 0.55 : 0;
+}
+
+let t = 0, prev = null, recording = false;
+function frame(ms) {
+  if (recording) return;
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+  t += RATE * dt;
+  breathe(ms);
+  draw(t);
+  requestAnimationFrame(frame);
+}
+
+window.__loop = K => { loopK = K; cache.clear(); };
+window.__frame = simT => { recording = true; credit.style.opacity = 0; draw(simT); };
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -17,10 +17,30 @@
               `brew install --cask webviewscreensaver`), point it at this
               file or its hosted URL.
     Windows — web-page-screensaver (github.com/cwc/web-page-screensaver),
-              same idea.
+              same idea; for the listening mode below prefer Wallpaper
+              Engine, whose CEF runtime opens this file directly.
     Linux   — a fullscreen kiosk browser on idle does the job.
 
-  No sound, no network, no pointer handlers — the wrapper owns wake-up.
+  No sound output, no network, no pointer handlers — the wrapper owns
+  wake-up.
+
+  IT ALSO LISTENS, when it may. On load the page quietly asks for the
+  microphone (no buttons — screensavers cannot be clicked). If the wrapper
+  grants it, each wave is born at the horizon wearing the colour of the
+  music playing in the room — dominant pitch class -> hue, register ->
+  lightness, on the full 12-class helix, exactly like waves_live.html —
+  and a quiet room hands the sea back to the generative walk. If the mic
+  is unavailable (denied, unsupported wrapper, no secure context), nothing
+  breaks: the sea stays generative. Under Wallpaper Engine the built-in
+  system-audio listener is used instead of the microphone: loudness and
+  onsets drive the swell and the foam, but the bin spacing of that API is
+  undocumented, so pitch-hue honestly stays with the generative walk
+  there. Audio never leaves the analyser; nothing is recorded or sent.
+  Add ?listen=0 to the URL to disable all listening.
+
+  macOS note: the mic prompt is issued to the screensaver host
+  (legacyScreenSaver) — allow it once under Privacy & Security ->
+  Microphone and it sticks.
 
   Recording hooks (used to render the seamless loop video):
     window.__loop(K)  — repeat the first K wave-notes forever; with K = 10
@@ -68,6 +88,17 @@ const LADDER = [
 ];
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
+// The full 12-class helix, C3..C6, for the listening mode (same source).
+const HELIX = [
+  "#482832", "#4F2C28", "#52331E", "#4F3C19", "#47471E", "#38512E",
+  "#225947", "#135D5F", "#215E74", "#3E5C84", "#5D5888", "#7B547D",
+  "#8F5467", "#995A52", "#9A6440", "#927234", "#81813B", "#668E55",
+  "#3F997C", "#269DA0", "#3C9DBF", "#6997D5", "#978FD9", "#C287C6",
+  "#DE86A2", "#E98D81", "#E89A66", "#D7AD60", "#BEBF72", "#A3CD93",
+  "#8ED6BB", "#8ED9DA", "#A0D9F0", "#BCD7FB", "#D7D5FA", "#EED6EF",
+  "#FADBE3",
+];
+
 const lcg = seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
 const walkRand = lcg(20260803);
 const noteOfWave = [];
@@ -89,13 +120,110 @@ function noteFor(j) {
   return noteOfWave[j];
 }
 
+// ---------- listening (optional, degrades to the walk) ---------------------
+const LISTEN = !/[?&]listen=0/.test(location.search);
+const FMIN = 65, FMAX = 2100;
+let ac = null, analyser = null, freqData = null, timeData = null, prevMag = null;
+const chroma = new Float32Array(12);
+let listening = false, weMode = false;
+let energy = 0, centroidOct = 1, confidence = 0, onsetFlux = 0, fluxAvg = 0.01, loud = 0;
+
+function startMic() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 4096;
+  analyser.smoothingTimeConstant = 0.5;
+  freqData = new Float32Array(analyser.frequencyBinCount);
+  timeData = new Float32Array(analyser.fftSize);
+  prevMag = new Float32Array(analyser.frequencyBinCount);
+  navigator.mediaDevices.getUserMedia(
+    { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+    .then(stream => {
+      ac.resume();
+      ac.createMediaStreamSource(stream).connect(analyser);
+      listening = true;
+    })
+    .catch(() => {});                      // denied or unavailable: stay generative
+}
+if (LISTEN) {
+  if (typeof window.wallpaperRegisterAudioListener === "function") {
+    // Wallpaper Engine system audio: loudness + onsets only (bin spacing
+    // is undocumented, so pitch-hue stays with the generative walk).
+    weMode = true;
+    window.wallpaperRegisterAudioListener(bins => {
+      let sum = 0;
+      for (let i = 0; i < bins.length; i++) sum += bins[i];
+      const e = sum / bins.length;
+      fluxAvg += 0.02 * (e - fluxAvg);
+      onsetFlux = e / (fluxAvg + 1e-6);
+      energy += 0.15 * (Math.min(1, e) - energy);
+    });
+  } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    startMic();
+  }
+}
+
+function listen() {
+  if (!listening) return;
+  analyser.getFloatFrequencyData(freqData);
+  analyser.getFloatTimeDomainData(timeData);
+  let rms = 0;
+  for (let i = 0; i < timeData.length; i++) rms += timeData[i] * timeData[i];
+  rms = Math.sqrt(rms / timeData.length);
+  energy += 0.1 * (rms - energy);
+  const binHz = ac.sampleRate / analyser.fftSize;
+  const raw = new Float32Array(12);
+  let csum = 0, cmagsum = 0, flux = 0;
+  const i0 = Math.max(1, Math.floor(FMIN / binHz));
+  const i1 = Math.min(freqData.length - 1, Math.ceil(FMAX / binHz));
+  for (let i = i0; i <= i1; i++) {
+    const mag = Math.pow(10, freqData[i] / 20);
+    const f = i * binHz;
+    raw[((Math.round(12 * Math.log2(f / 130.81)) % 12) + 12) % 12] += mag;
+    csum += f * mag; cmagsum += mag;
+    const d = mag - prevMag[i];
+    if (d > 0) flux += d;
+    prevMag[i] = mag;
+  }
+  fluxAvg += 0.02 * (flux - fluxAvg);
+  onsetFlux = flux / (fluxAvg + 1e-9);
+  let tot = 0, mx = 0;
+  for (let p = 0; p < 12; p++) {
+    chroma[p] += 0.15 * (raw[p] - chroma[p]);
+    tot += chroma[p]; mx = Math.max(mx, chroma[p]);
+  }
+  confidence = tot > 1e-7 && energy > 0.004 ? mx / (tot / 12) : 0;
+  if (cmagsum > 1e-7) {
+    const oct = Math.log2((csum / cmagsum) / 130.81);
+    centroidOct += 0.1 * (Math.min(3, Math.max(0, oct)) - centroidOct);
+  }
+}
+function dominantHex() {
+  let p = 0;
+  for (let i = 1; i < 12; i++) if (chroma[i] > chroma[p]) p = i;
+  const octave = Math.min(2, Math.max(0, Math.round(centroidOct - 0.5)));
+  return HELIX[Math.min(HELIX.length - 1, 12 * octave + p)];
+}
+
+// each wave keeps the colour it was born with at the horizon
+const bandHex = new Map();
+function hexFor(m) {
+  if (loopK > 0) return LADDER[noteFor(m)].hex;   // recording: pure walk
+  if (!bandHex.has(m)) {
+    bandHex.set(m, listening && confidence > 1.6 ? dominantHex()
+                                                 : LADDER[noteFor(m)].hex);
+    if (bandHex.size > 40) bandHex.delete(bandHex.keys().next().value);
+  }
+  return bandHex.get(m);
+}
+
 const MIX = [0.12, 0.22, 0.36, 0.60];
 const cache = new Map();
 function stylesFor(m) {
   const key = loopK > 0 ? (m % loopK) : m;
   let s = cache.get(key);
   if (s) return s;
-  const [r, g, b] = hexRgb(LADDER[noteFor(m)].hex);
+  const [r, g, b] = hexRgb(hexFor(m));
   s = MIX.map(f => `rgba(${Math.round(r + (255 - r) * f)},${
     Math.round(g + (255 - g) * f)},${Math.round(b + (255 - b) * f)},0.7)`);
   cache.set(key, s);
@@ -123,19 +251,33 @@ function resize(w, h) {
 resize(window.innerWidth, window.innerHeight);
 window.addEventListener("resize", () => resize(window.innerWidth, window.innerHeight));
 
+let foamT = -1e9;
 function draw(t) {
   ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = "lighter";
+
+  // listening: the waterline sheen wears the music's colour instantly
+  if (listening && confidence > 1.6 && loopK === 0) {
+    const [r, g, b] = hexRgb(dominantHex());
+    const sheen = ctx.createLinearGradient(0, SHORE - 0.12 * H, 0, SHORE);
+    sheen.addColorStop(0, "rgba(0,0,0,0)");
+    sheen.addColorStop(1, `rgba(${r},${g},${b},${Math.min(0.22, 0.05 + loud * 1.4)})`);
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, SHORE - 0.12 * H, W, 0.12 * H);
+  }
+
   const jNow = Math.floor((t + D_MIN) / TAU);
-  const foam = jNow >= 1 ? Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4) : 0;
+  const arrival = jNow >= 1 ? Math.exp(-(t - (TAU * jNow - D_MIN)) / 1.4) : 0;
+  const foam = Math.max(arrival, Math.exp(-(t - foamT) / 1.4));
+  const amp = (listening || weMode) ? 0.7 + 2.6 * loud : 1;
   let last = null;
   for (let i = 0; i < N; i++) {
     const y = SY[i], u = SU[i];
     const c = y * 0.5 + D_MIN + t + 0.4 * Math.sin(u * TAU + y * 0.3);
     const cr = 0.5 + 0.5 * Math.cos(c);
-    const swell = (7 + 26 * Math.exp(-y / 10)) * (0.3 * cr + 0.7 * cr * cr * cr);
+    const swell = (7 + 26 * Math.exp(-y / 10)) * (0.3 * cr + 0.7 * cr * cr * cr) * amp;
     const ripple = 3 * Math.sin(0.8 * y - t + 2.5 * Math.sin(TAU * u + y * 0.15))
                  + 1.6 * Math.sin(2.7 * y + 0.8 * t + 5 * TAU * u);
     const pp = Math.pow(y / 42.6, 0.8);
@@ -164,7 +306,10 @@ function frame(ms) {
   if (recording) return;
   if (prev === null) prev = ms;
   const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
-  t += RATE * dt;
+  listen();
+  loud += 0.12 * (Math.min(1, energy * 6) - loud);
+  t += RATE * ((listening || weMode) ? 0.85 + 0.5 * loud : 1) * dt;
+  if ((listening || weMode) && onsetFlux > 2.2 && t - foamT > 0.8) foamT = t;
   breathe(ms);
   draw(t);
   requestAnimationFrame(frame);

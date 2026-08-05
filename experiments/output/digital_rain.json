@@ -1,0 +1,426 @@
+{
+  "model": "pitch-colour helix (angle = pitch class on a closed dE-spaced hue ring, height = lightness = absolute pitch), audited on the exact colours the artwork displays",
+  "floor": 6.0,
+  "range": "C2..B5, 48 chromatic notes",
+  "claim": "art built on the mapping, not an accessible encoding: the 48 colours clear the exploratory floor in normal vision, and collapse under every simulated dichromacy",
+  "notes": [
+    {
+      "note": "C2",
+      "pc": "C",
+      "f": 65.41,
+      "L": 0.32,
+      "hue": 0.0,
+      "hex": "#482832"
+    },
+    {
+      "note": "C#2",
+      "pc": "C#",
+      "f": 69.3,
+      "L": 0.333,
+      "hue": 28.0,
+      "hex": "#4E2B27"
+    },
+    {
+      "note": "D2",
+      "pc": "D",
+      "f": 73.42,
+      "L": 0.346,
+      "hue": 53.8,
+      "hex": "#4F311D"
+    },
+    {
+      "note": "D#2",
+      "pc": "D#",
+      "f": 77.78,
+      "L": 0.358,
+      "hue": 81.2,
+      "hex": "#4C3917"
+    },
+    {
+      "note": "E2",
+      "pc": "E",
+      "f": 82.41,
+      "L": 0.371,
+      "hue": 108.8,
+      "hex": "#43421B"
+    },
+    {
+      "note": "F2",
+      "pc": "F",
+      "f": 87.31,
+      "L": 0.384,
+      "hue": 137.2,
+      "hex": "#344B2A"
+    },
+    {
+      "note": "F#2",
+      "pc": "F#",
+      "f": 92.5,
+      "L": 0.397,
+      "hue": 168.8,
+      "hex": "#1E5141"
+    },
+    {
+      "note": "G2",
+      "pc": "G",
+      "f": 98.0,
+      "L": 0.409,
+      "hue": 197.2,
+      "hex": "#105556"
+    },
+    {
+      "note": "G#2",
+      "pc": "G#",
+      "f": 103.83,
+      "L": 0.422,
+      "hue": 225.0,
+      "hex": "#1D5569"
+    },
+    {
+      "note": "A2",
+      "pc": "A",
+      "f": 110.0,
+      "L": 0.435,
+      "hue": 255.8,
+      "hex": "#375276"
+    },
+    {
+      "note": "A#2",
+      "pc": "A#",
+      "f": 116.54,
+      "L": 0.448,
+      "hue": 288.2,
+      "hex": "#534E79"
+    },
+    {
+      "note": "B2",
+      "pc": "B",
+      "f": 123.47,
+      "L": 0.46,
+      "hue": 324.5,
+      "hex": "#6C4A6F"
+    },
+    {
+      "note": "C3",
+      "pc": "C",
+      "f": 130.81,
+      "L": 0.473,
+      "hue": 0.0,
+      "hex": "#7E495A"
+    },
+    {
+      "note": "C#3",
+      "pc": "C#",
+      "f": 138.59,
+      "L": 0.486,
+      "hue": 28.0,
+      "hex": "#854E47"
+    },
+    {
+      "note": "D3",
+      "pc": "D",
+      "f": 146.83,
+      "L": 0.499,
+      "hue": 53.8,
+      "hex": "#855636"
+    },
+    {
+      "note": "D#3",
+      "pc": "D#",
+      "f": 155.56,
+      "L": 0.511,
+      "hue": 81.2,
+      "hex": "#7E612C"
+    },
+    {
+      "note": "E3",
+      "pc": "E",
+      "f": 164.81,
+      "L": 0.524,
+      "hue": 108.8,
+      "hex": "#6E6E32"
+    },
+    {
+      "note": "F3",
+      "pc": "F",
+      "f": 174.61,
+      "L": 0.537,
+      "hue": 137.2,
+      "hex": "#567948"
+    },
+    {
+      "note": "F#3",
+      "pc": "F#",
+      "f": 185.0,
+      "L": 0.55,
+      "hue": 168.8,
+      "hex": "#358269"
+    },
+    {
+      "note": "G3",
+      "pc": "G",
+      "f": 196.0,
+      "L": 0.563,
+      "hue": 197.2,
+      "hex": "#1F8587"
+    },
+    {
+      "note": "G#3",
+      "pc": "G#",
+      "f": 207.65,
+      "L": 0.575,
+      "hue": 225.0,
+      "hex": "#3184A1"
+    },
+    {
+      "note": "A3",
+      "pc": "A",
+      "f": 220.0,
+      "L": 0.588,
+      "hue": 255.8,
+      "hex": "#577FB3"
+    },
+    {
+      "note": "A#3",
+      "pc": "A#",
+      "f": 233.08,
+      "L": 0.601,
+      "hue": 288.2,
+      "hex": "#7E77B5"
+    },
+    {
+      "note": "B3",
+      "pc": "B",
+      "f": 246.94,
+      "L": 0.614,
+      "hue": 324.5,
+      "hex": "#A170A4"
+    },
+    {
+      "note": "C4",
+      "pc": "C",
+      "f": 261.63,
+      "L": 0.626,
+      "hue": 0.0,
+      "hex": "#B86E86"
+    },
+    {
+      "note": "C#4",
+      "pc": "C#",
+      "f": 277.18,
+      "L": 0.639,
+      "hue": 28.0,
+      "hex": "#C1736A"
+    },
+    {
+      "note": "D4",
+      "pc": "D",
+      "f": 293.67,
+      "L": 0.652,
+      "hue": 53.8,
+      "hex": "#C07E52"
+    },
+    {
+      "note": "D#4",
+      "pc": "D#",
+      "f": 311.13,
+      "L": 0.665,
+      "hue": 81.2,
+      "hex": "#B48D42"
+    },
+    {
+      "note": "E4",
+      "pc": "E",
+      "f": 329.63,
+      "L": 0.677,
+      "hue": 108.8,
+      "hex": "#9D9D4A"
+    },
+    {
+      "note": "F4",
+      "pc": "F",
+      "f": 349.23,
+      "L": 0.69,
+      "hue": 137.2,
+      "hex": "#7BAB68"
+    },
+    {
+      "note": "F#4",
+      "pc": "F#",
+      "f": 370.0,
+      "L": 0.703,
+      "hue": 168.8,
+      "hex": "#4DB593"
+    },
+    {
+      "note": "G4",
+      "pc": "G",
+      "f": 392.0,
+      "L": 0.716,
+      "hue": 197.2,
+      "hex": "#2EB8BC"
+    },
+    {
+      "note": "G#4",
+      "pc": "G#",
+      "f": 415.31,
+      "L": 0.729,
+      "hue": 225.0,
+      "hex": "#46B6DD"
+    },
+    {
+      "note": "A4",
+      "pc": "A",
+      "f": 440.0,
+      "L": 0.741,
+      "hue": 255.8,
+      "hex": "#79AEF3"
+    },
+    {
+      "note": "A#4",
+      "pc": "A#",
+      "f": 466.16,
+      "L": 0.754,
+      "hue": 288.2,
+      "hex": "#ACA3F4"
+    },
+    {
+      "note": "B4",
+      "pc": "B",
+      "f": 493.88,
+      "L": 0.767,
+      "hue": 324.5,
+      "hex": "#D69BDA"
+    },
+    {
+      "note": "C5",
+      "pc": "C",
+      "f": 523.25,
+      "L": 0.78,
+      "hue": 0.0,
+      "hex": "#EE9BB4"
+    },
+    {
+      "note": "C#5",
+      "pc": "C#",
+      "f": 554.37,
+      "L": 0.792,
+      "hue": 28.0,
+      "hex": "#F3A499"
+    },
+    {
+      "note": "D5",
+      "pc": "D",
+      "f": 587.33,
+      "L": 0.805,
+      "hue": 53.8,
+      "hex": "#EDB088"
+    },
+    {
+      "note": "D#5",
+      "pc": "D#",
+      "f": 622.26,
+      "L": 0.818,
+      "hue": 81.2,
+      "hex": "#DFBE85"
+    },
+    {
+      "note": "E5",
+      "pc": "E",
+      "f": 659.26,
+      "L": 0.831,
+      "hue": 108.8,
+      "hex": "#CBCC92"
+    },
+    {
+      "note": "F5",
+      "pc": "F",
+      "f": 698.46,
+      "L": 0.843,
+      "hue": 137.2,
+      "hex": "#B6D7AA"
+    },
+    {
+      "note": "F#5",
+      "pc": "F#",
+      "f": 739.99,
+      "L": 0.856,
+      "hue": 168.8,
+      "hex": "#A6DEC8"
+    },
+    {
+      "note": "G5",
+      "pc": "G",
+      "f": 783.99,
+      "L": 0.869,
+      "hue": 197.2,
+      "hex": "#A7E0E1"
+    },
+    {
+      "note": "G#5",
+      "pc": "G#",
+      "f": 830.61,
+      "L": 0.882,
+      "hue": 225.0,
+      "hex": "#B4E0F3"
+    },
+    {
+      "note": "A5",
+      "pc": "A",
+      "f": 880.0,
+      "L": 0.894,
+      "hue": 255.8,
+      "hex": "#C8DEFC"
+    },
+    {
+      "note": "A#5",
+      "pc": "A#",
+      "f": 932.33,
+      "L": 0.907,
+      "hue": 288.2,
+      "hex": "#DEDDFB"
+    },
+    {
+      "note": "B5",
+      "pc": "B",
+      "f": 987.77,
+      "L": 0.92,
+      "hue": 324.5,
+      "hex": "#F1DDF2"
+    }
+  ],
+  "audit": {
+    "normal": {
+      "adjacent_min": 7.1,
+      "adjacent_below_floor": 0,
+      "adjacent_steps": 47,
+      "worst_adjacent": "C2->C#2",
+      "pairwise_min": 7.1,
+      "luminance_reversals": 0
+    },
+    "protanopia": {
+      "adjacent_min": 0.9,
+      "adjacent_below_floor": 23,
+      "adjacent_steps": 47,
+      "worst_adjacent": "A5->A#5",
+      "pairwise_min": 0.9,
+      "luminance_reversals": 9
+    },
+    "deuteranopia": {
+      "adjacent_min": 1.1,
+      "adjacent_below_floor": 26,
+      "adjacent_steps": 47,
+      "worst_adjacent": "D#2->E2",
+      "pairwise_min": 1.1,
+      "luminance_reversals": 0
+    },
+    "tritanopia": {
+      "adjacent_min": 1.8,
+      "adjacent_below_floor": 23,
+      "adjacent_steps": 47,
+      "worst_adjacent": "C#2->D2",
+      "pairwise_min": 1.8,
+      "luminance_reversals": 1
+    }
+  }
+}

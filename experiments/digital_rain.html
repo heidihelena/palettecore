@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital rain — forty-eight notes descending</title>
+<!--
+  Digital rain
+  The palettecore pitch-colour helix as falling code.
+
+  Forty-eight notes, C2..B5. Each column of rain carries one note: every
+  glyph in the column is that note's colour in the helix model (hue = pitch
+  class on a closed CIEDE2000-spaced ring, lightness = absolute pitch), and
+  the note sounds when the drop reaches the bottom of the screen.
+
+  The piece opens the way the poem does. C2 falls first, then C#2, D2, D#2,
+  E2, and on through the octave; each octave completes before the next one
+  starts, and once all forty-eight have fallen the rain runs free and never
+  repeats the same arrangement.
+
+  The colours and the Machado dichromacy matrices below are injected by
+  experiments/digital_rain.py from the palettecore engine, together with
+  their audit (output/digital_rain.json) — the artwork cannot drift from the
+  numbers. The audit splits, and the piece is built to show the split rather
+  than assert it: in normal vision the 48 colours clear the package's
+  exploratory dE 6 floor (minimum adjacent 7.1, none below), because
+  lightness climbs with absolute pitch across four octaves. Under every
+  simulated dichromacy the code collapses, which is what the vision toggle
+  is for. This is art built on the mapping, never an accessible encoding.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica Mono";
+    src: url("/brand/fonts/nudica-mono-medium.woff2") format("woff2");
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Nudica";
+    src: url("/brand/fonts/nudica-medium.woff2") format("woff2");
+    font-weight: 100 599; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    background: #000; color: #cfc9c2;
+    font: 300 13px/1.5 "Nudica", "Avenir Next", system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; padding: 16px;
+  }
+  #stage { position: relative; }
+  canvas { display: block; max-width: 100%; height: auto; background: #000; }
+  #hud {
+    position: absolute; top: 10px; left: 12px; display: flex;
+    flex-direction: column; gap: 6px; align-items: flex-start;
+  }
+  #hud h1 { font-size: 15px; font-weight: normal; font-style: italic; opacity: .85; }
+  #hud .sub { font-size: 11px; opacity: .55; letter-spacing: .06em; }
+  #controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
+  button, select {
+    background: rgba(255,255,255,.06); color: #cfc9c2;
+    border: 1px solid rgba(255,255,255,.22); border-radius: 3px;
+    font: 300 12px "Nudica", system-ui, sans-serif; padding: 3px 10px; cursor: pointer;
+  }
+  button:hover, select:hover { background: rgba(255,255,255,.14); }
+  #now {
+    position: absolute; right: 12px; top: 10px; text-align: right; font-size: 13px; opacity: .9;
+  }
+  #now .hex { font: 11px "Nudica Mono", ui-monospace, monospace; opacity: .6; }
+  #now .phase { font-size: 11px; opacity: .5; letter-spacing: .08em; }
+  #audit {
+    position: absolute; right: 12px; bottom: 10px; text-align: right;
+    font: 10.5px/1.6 "Nudica Mono", ui-monospace, monospace; opacity: .5;
+  }
+  #caption { max-width: 760px; font-size: 12px; opacity: .6; text-align: center; }
+  /* The readouts sit over falling glyphs; a tight shadow keeps them legible
+     without putting a panel between the visitor and the artwork. */
+  #now, #audit, #hud { text-shadow: 0 0 6px #000, 0 0 3px #000, 0 1px 2px #000; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="rain" width="880" height="620"></canvas>
+  <div id="hud">
+    <h1>Digital rain</h1>
+    <div class="sub">forty-eight notes descending</div>
+    <div id="controls">
+      <button id="play">play</button>
+      <button id="restart" title="fall again from C2">from C2</button>
+      <select id="vision" title="Machado dichromacy simulation, severity 1.0">
+        <option value="">normal vision</option>
+        <option value="protanopia">protanopia (simulated)</option>
+        <option value="deuteranopia">deuteranopia (simulated)</option>
+        <option value="tritanopia">tritanopia (simulated)</option>
+      </select>
+    </div>
+  </div>
+  <div id="now"></div>
+  <div id="audit"></div>
+</div>
+<div id="caption">
+  Each column is one note: hue is its pitch class, lightness its pitch, from the
+  palettecore pitch-colour helix. C2 falls first and the rain introduces all
+  forty-eight notes in order before running free. The mapping is a designed
+  convention (Newton and Scriabin disagreed about C); the audit of these exact
+  colours is in <code>output/digital_rain.json</code>, and the vision toggle
+  shows what it reports.
+</div>
+
+<script>
+// BEGIN GENERATED by digital_rain.py — do not edit by hand
+const DATA = {
+ "notes": [
+  {
+   "note": "C2",
+   "pc": "C",
+   "f": 65.41,
+   "L": 0.32,
+   "hue": 0.0,
+   "hex": "#482832"
+  },
+  {
+   "note": "C#2",
+   "pc": "C#",
+   "f": 69.3,
+   "L": 0.333,
+   "hue": 28.0,
+   "hex": "#4E2B27"
+  },
+  {
+   "note": "D2",
+   "pc": "D",
+   "f": 73.42,
+   "L": 0.346,
+   "hue": 53.8,
+   "hex": "#4F311D"
+  },
+  {
+   "note": "D#2",
+   "pc": "D#",
+   "f": 77.78,
+   "L": 0.358,
+   "hue": 81.2,
+   "hex": "#4C3917"
+  },
+  {
+   "note": "E2",
+   "pc": "E",
+   "f": 82.41,
+   "L": 0.371,
+   "hue": 108.8,
+   "hex": "#43421B"
+  },
+  {
+   "note": "F2",
+   "pc": "F",
+   "f": 87.31,
+   "L": 0.384,
+   "hue": 137.2,
+   "hex": "#344B2A"
+  },
+  {
+   "note": "F#2",
+   "pc": "F#",
+   "f": 92.5,
+   "L": 0.397,
+   "hue": 168.8,
+   "hex": "#1E5141"
+  },
+  {
+   "note": "G2",
+   "pc": "G",
+   "f": 98.0,
+   "L": 0.409,
+   "hue": 197.2,
+   "hex": "#105556"
+  },
+  {
+   "note": "G#2",
+   "pc": "G#",
+   "f": 103.83,
+   "L": 0.422,
+   "hue": 225.0,
+   "hex": "#1D5569"
+  },
+  {
+   "note": "A2",
+   "pc": "A",
+   "f": 110.0,
+   "L": 0.435,
+   "hue": 255.8,
+   "hex": "#375276"
+  },
+  {
+   "note": "A#2",
+   "pc": "A#",
+   "f": 116.54,
+   "L": 0.448,
+   "hue": 288.2,
+   "hex": "#534E79"
+  },
+  {
+   "note": "B2",
+   "pc": "B",
+   "f": 123.47,
+   "L": 0.46,
+   "hue": 324.5,
+   "hex": "#6C4A6F"
+  },
+  {
+   "note": "C3",
+   "pc": "C",
+   "f": 130.81,
+   "L": 0.473,
+   "hue": 0.0,
+   "hex": "#7E495A"
+  },
+  {
+   "note": "C#3",
+   "pc": "C#",
+   "f": 138.59,
+   "L": 0.486,
+   "hue": 28.0,
+   "hex": "#854E47"
+  },
+  {
+   "note": "D3",
+   "pc": "D",
+   "f": 146.83,
+   "L": 0.499,
+   "hue": 53.8,
+   "hex": "#855636"
+  },
+  {
+   "note": "D#3",
+   "pc": "D#",
+   "f": 155.56,
+   "L": 0.511,
+   "hue": 81.2,
+   "hex": "#7E612C"
+  },
+  {
+   "note": "E3",
+   "pc": "E",
+   "f": 164.81,
+   "L": 0.524,
+   "hue": 108.8,
+   "hex": "#6E6E32"
+  },
+  {
+   "note": "F3",
+   "pc": "F",
+   "f": 174.61,
+   "L": 0.537,
+   "hue": 137.2,
+   "hex": "#567948"
+  },
+  {
+   "note": "F#3",
+   "pc": "F#",
+   "f": 185.0,
+   "L": 0.55,
+   "hue": 168.8,
+   "hex": "#358269"
+  },
+  {
+   "note": "G3",
+   "pc": "G",
+   "f": 196.0,
+   "L": 0.563,
+   "hue": 197.2,
+   "hex": "#1F8587"
+  },
+  {
+   "note": "G#3",
+   "pc": "G#",
+   "f": 207.65,
+   "L": 0.575,
+   "hue": 225.0,
+   "hex": "#3184A1"
+  },
+  {
+   "note": "A3",
+   "pc": "A",
+   "f": 220.0,
+   "L": 0.588,
+   "hue": 255.8,
+   "hex": "#577FB3"
+  },
+  {
+   "note": "A#3",
+   "pc": "A#",
+   "f": 233.08,
+   "L": 0.601,
+   "hue": 288.2,
+   "hex": "#7E77B5"
+  },
+  {
+   "note": "B3",
+   "pc": "B",
+   "f": 246.94,
+   "L": 0.614,
+   "hue": 324.5,
+   "hex": "#A170A4"
+  },
+  {
+   "note": "C4",
+   "pc": "C",
+   "f": 261.63,
+   "L": 0.626,
+   "hue": 0.0,
+   "hex": "#B86E86"
+  },
+  {
+   "note": "C#4",
+   "pc": "C#",
+   "f": 277.18,
+   "L": 0.639,
+   "hue": 28.0,
+   "hex": "#C1736A"
+  },
+  {
+   "note": "D4",
+   "pc": "D",
+   "f": 293.67,
+   "L": 0.652,
+   "hue": 53.8,
+   "hex": "#C07E52"
+  },
+  {
+   "note": "D#4",
+   "pc": "D#",
+   "f": 311.13,
+   "L": 0.665,
+   "hue": 81.2,
+   "hex": "#B48D42"
+  },
+  {
+   "note": "E4",
+   "pc": "E",
+   "f": 329.63,
+   "L": 0.677,
+   "hue": 108.8,
+   "hex": "#9D9D4A"
+  },
+  {
+   "note": "F4",
+   "pc": "F",
+   "f": 349.23,
+   "L": 0.69,
+   "hue": 137.2,
+   "hex": "#7BAB68"
+  },
+  {
+   "note": "F#4",
+   "pc": "F#",
+   "f": 370.0,
+   "L": 0.703,
+   "hue": 168.8,
+   "hex": "#4DB593"
+  },
+  {
+   "note": "G4",
+   "pc": "G",
+   "f": 392.0,
+   "L": 0.716,
+   "hue": 197.2,
+   "hex": "#2EB8BC"
+  },
+  {
+   "note": "G#4",
+   "pc": "G#",
+   "f": 415.31,
+   "L": 0.729,
+   "hue": 225.0,
+   "hex": "#46B6DD"
+  },
+  {
+   "note": "A4",
+   "pc": "A",
+   "f": 440.0,
+   "L": 0.741,
+   "hue": 255.8,
+   "hex": "#79AEF3"
+  },
+  {
+   "note": "A#4",
+   "pc": "A#",
+   "f": 466.16,
+   "L": 0.754,
+   "hue": 288.2,
+   "hex": "#ACA3F4"
+  },
+  {
+   "note": "B4",
+   "pc": "B",
+   "f": 493.88,
+   "L": 0.767,
+   "hue": 324.5,
+   "hex": "#D69BDA"
+  },
+  {
+   "note": "C5",
+   "pc": "C",
+   "f": 523.25,
+   "L": 0.78,
+   "hue": 0.0,
+   "hex": "#EE9BB4"
+  },
+  {
+   "note": "C#5",
+   "pc": "C#",
+   "f": 554.37,
+   "L": 0.792,
+   "hue": 28.0,
+   "hex": "#F3A499"
+  },
+  {
+   "note": "D5",
+   "pc": "D",
+   "f": 587.33,
+   "L": 0.805,
+   "hue": 53.8,
+   "hex": "#EDB088"
+  },
+  {
+   "note": "D#5",
+   "pc": "D#",
+   "f": 622.26,
+   "L": 0.818,
+   "hue": 81.2,
+   "hex": "#DFBE85"
+  },
+  {
+   "note": "E5",
+   "pc": "E",
+   "f": 659.26,
+   "L": 0.831,
+   "hue": 108.8,
+   "hex": "#CBCC92"
+  },
+  {
+   "note": "F5",
+   "pc": "F",
+   "f": 698.46,
+   "L": 0.843,
+   "hue": 137.2,
+   "hex": "#B6D7AA"
+  },
+  {
+   "note": "F#5",
+   "pc": "F#",
+   "f": 739.99,
+   "L": 0.856,
+   "hue": 168.8,
+   "hex": "#A6DEC8"
+  },
+  {
+   "note": "G5",
+   "pc": "G",
+   "f": 783.99,
+   "L": 0.869,
+   "hue": 197.2,
+   "hex": "#A7E0E1"
+  },
+  {
+   "note": "G#5",
+   "pc": "G#",
+   "f": 830.61,
+   "L": 0.882,
+   "hue": 225.0,
+   "hex": "#B4E0F3"
+  },
+  {
+   "note": "A5",
+   "pc": "A",
+   "f": 880.0,
+   "L": 0.894,
+   "hue": 255.8,
+   "hex": "#C8DEFC"
+  },
+  {
+   "note": "A#5",
+   "pc": "A#",
+   "f": 932.33,
+   "L": 0.907,
+   "hue": 288.2,
+   "hex": "#DEDDFB"
+  },
+  {
+   "note": "B5",
+   "pc": "B",
+   "f": 987.77,
+   "L": 0.92,
+   "hue": 324.5,
+   "hex": "#F1DDF2"
+  }
+ ],
+ "audit": {
+  "normal": {
+   "adjacent_min": 7.1,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 47,
+   "worst_adjacent": "C2->C#2",
+   "pairwise_min": 7.1,
+   "luminance_reversals": 0
+  },
+  "protanopia": {
+   "adjacent_min": 0.9,
+   "adjacent_below_floor": 23,
+   "adjacent_steps": 47,
+   "worst_adjacent": "A5->A#5",
+   "pairwise_min": 0.9,
+   "luminance_reversals": 9
+  },
+  "deuteranopia": {
+   "adjacent_min": 1.1,
+   "adjacent_below_floor": 26,
+   "adjacent_steps": 47,
+   "worst_adjacent": "D#2->E2",
+   "pairwise_min": 1.1,
+   "luminance_reversals": 0
+  },
+  "tritanopia": {
+   "adjacent_min": 1.8,
+   "adjacent_below_floor": 23,
+   "adjacent_steps": 47,
+   "worst_adjacent": "C#2->D2",
+   "pairwise_min": 1.8,
+   "luminance_reversals": 1
+  }
+ },
+ "machado": {
+  "protanopia": [
+   [
+    0.152286,
+    1.052583,
+    -0.204868
+   ],
+   [
+    0.114503,
+    0.786281,
+    0.099216
+   ],
+   [
+    -0.003882,
+    -0.048116,
+    1.051998
+   ]
+  ],
+  "deuteranopia": [
+   [
+    0.367322,
+    0.860646,
+    -0.227968
+   ],
+   [
+    0.280085,
+    0.672501,
+    0.047413
+   ],
+   [
+    -0.01182,
+    0.04294,
+    0.968881
+   ]
+  ],
+  "tritanopia": [
+   [
+    1.255528,
+    -0.076749,
+    -0.178779
+   ],
+   [
+    -0.078411,
+    0.930809,
+    0.147602
+   ],
+   [
+    0.004733,
+    0.691367,
+    0.3039
+   ]
+  ]
+ }
+};
+// END GENERATED
+
+(() => {
+"use strict";
+if (!DATA) { document.getElementById("caption").textContent =
+  "Palette not injected — run: PYTHONPATH=.:experiments python3 experiments/digital_rain.py"; return; }
+
+// ---------- colour: sRGB <-> linear, Machado simulation (same policy as
+// palettecore.cvd: matrix in linear RGB, channel clamp, back to sRGB) -------
+const s2l = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const l2s = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+let visionCond = "";
+function displayed(hex) {                 // [r,g,b] 0..255 as the selected viewer sees it
+  let rgb = hexRgb(hex);
+  if (visionCond) {
+    const lin = rgb.map(s2l), m = DATA.machado[visionCond];
+    rgb = m.map(row => Math.min(1, Math.max(0,
+      row[0] * lin[0] + row[1] * lin[1] + row[2] * lin[2]))).map(l2s);
+  }
+  return rgb.map(c => Math.round(Math.min(1, Math.max(0, c)) * 255));
+}
+
+const NOTES = DATA.notes;                 // C2..B5, 48 entries
+
+// ---------- the glyphs -----------------------------------------------------
+// "Every note becomes a droplet. Every droplet becomes a pixel." The alphabet
+// is the material the code is written in: pitch-class letters, the sharp, the
+// octave digits this piece spans, and a few rule glyphs for texture. No
+// katakana — the rain is made of the notation it is encoding, not of borrowed
+// scenery.
+const GLYPHS = [..."ABCDEFG", "♯", "♭", ..."2345", ..."│─┼·•▫▪"];
+const glyph = () => GLYPHS[(Math.random() * GLYPHS.length) | 0];
+
+const canvas = document.getElementById("rain");
+const ctx = canvas.getContext("2d");
+const W = canvas.width, H = canvas.height;
+const CELL = 17;                          // glyph cell height
+const COLW = 22;                          // column width
+const COLS = Math.floor(W / COLW);
+const ROWS = Math.floor(H / CELL);
+
+// ---------- the fall -------------------------------------------------------
+// A drop is one note falling down one column. During the opening the notes
+// are released in chromatic order, one octave at a time; afterwards they are
+// drawn at random, so the rain never repeats yet always plays the same 48.
+let drops = [];                           // {note, col, y, speed, len, chars, struck}
+let released = 0;                         // how many of the 48 have fallen yet
+let intro = true;
+let sinceRelease = 0, sinceSpawn = 0;
+const RELEASE_GAP = 0.30;                 // seconds between NEW notes in the opening
+const SPAWN_GAP = 0.075;                  // seconds between drops drawn from the pool
+const MAX_DROPS = 240;
+// A note keeps raining once it has been introduced, so the field thickens as
+// the opening climbs: the first octave is still falling as the second starts.
+// "The first octave dissolves into static."
+
+function spawn(noteIdx) {
+  const len = 9 + ((Math.random() * 12) | 0);
+  drops.push({
+    note: noteIdx,
+    col: (Math.random() * COLS) | 0,
+    y: -len * CELL * Math.random(),
+    speed: 85 + Math.random() * 115,      // px per second
+    len,
+    chars: Array.from({ length: len }, glyph),
+    struck: false,
+  });
+  if (drops.length > MAX_DROPS) drops.shift();
+}
+
+function restart() {
+  drops = []; released = 0; intro = true; sinceRelease = 0; sinceSpawn = 0;
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- sound: the note sounds when the drop lands ---------------------
+// "Each drop finds another pane of glass."
+let ac = null, master = null;
+function audioInit() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+}
+function strike(entry) {
+  if (!ac) return;
+  const when = ac.currentTime;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(0.085, when + 0.012);   // a hit, not a swell
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 1.9);
+  const lp = ac.createBiquadFilter();
+  lp.type = "lowpass"; lp.frequency.value = Math.min(5200, entry.f * 7);
+  for (const [type, det, gain] of [["sine", 0, 1], ["triangle", 4, 0.42]]) {
+    const o = ac.createOscillator(); o.type = type;
+    o.frequency.value = entry.f; o.detune.value = det;
+    const og = ac.createGain(); og.gain.value = gain;
+    o.connect(og).connect(lp); o.start(when); o.stop(when + 2.1);
+  }
+  lp.connect(g).connect(master);
+}
+
+// ---------- draw -----------------------------------------------------------
+let playing = false, prev = null, lastNote = 0;
+const nowEl = document.getElementById("now");
+const auditEl = document.getElementById("audit");
+
+function draw(dt) {
+  // The trail: a translucent wipe rather than a clear, so glyphs decay in place.
+  ctx.fillStyle = "rgba(0,0,0,0.13)";
+  ctx.fillRect(0, 0, W, H);
+  ctx.font = `500 ${CELL - 3}px "Nudica Mono", ui-monospace, monospace`;
+  ctx.textBaseline = "top";
+
+  for (const d of drops) {
+    if (playing) d.y += d.speed * dt;
+    const e = NOTES[d.note];
+    const [r, g, b] = displayed(e.hex);
+    const headRow = Math.floor(d.y / CELL);
+    for (let k = 0; k < d.len; k++) {
+      const row = headRow - k;
+      if (row < 0 || row >= ROWS) continue;
+      // The head is near-white and fades back into the note's own colour.
+      const t = k / d.len;
+      const fade = Math.pow(1 - t, 1.5);
+      const w = k === 0 ? 0.78 : k === 1 ? 0.34 : 0;      // mix toward white
+      ctx.fillStyle = `rgba(${Math.round(r + (255 - r) * w)},${
+        Math.round(g + (255 - g) * w)},${Math.round(b + (255 - b) * w)},${
+        (0.15 + 0.85 * fade).toFixed(3)})`;
+      if (playing && Math.random() < 0.03) d.chars[k] = glyph();
+      ctx.fillText(d.chars[k], d.col * COLW + 4, row * CELL);
+    }
+    // The strike: the note sounds as the head reaches the bottom pane.
+    if (!d.struck && d.y >= H) { d.struck = true; lastNote = d.note; strike(e); }
+  }
+  drops = drops.filter(d => d.y - d.len * CELL < H + CELL);
+}
+
+function frame(ms) {
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+
+  if (playing) {
+    // One thread introduces the next note in chromatic order; the other keeps
+    // every note already introduced falling, so the rain thickens as it climbs.
+    if (intro) {
+      sinceRelease += dt;
+      if (sinceRelease >= RELEASE_GAP) {
+        sinceRelease = 0;
+        spawn(released);
+        released += 1;
+        if (released >= NOTES.length) intro = false;
+      }
+    }
+    sinceSpawn += dt;
+    if (sinceSpawn >= SPAWN_GAP && released > 0) {
+      sinceSpawn = 0;
+      const pool = intro ? released : NOTES.length;
+      spawn((Math.random() * pool) | 0);
+    }
+  }
+
+  draw(dt);
+
+  const e = NOTES[lastNote];
+  const [r, g, b] = displayed(e.hex);
+  nowEl.innerHTML = `<span style="color:rgb(${r},${g},${b})">&#9679;</span> ${e.note}
+    &middot; ${e.f} Hz<br><span class="hex">${e.hex}${visionCond ? " as seen" : ""}</span>
+    <br><span class="phase">${intro ? `${released}/${NOTES.length} released`
+      : "rain running free"}</span>`;
+  requestAnimationFrame(frame);
+}
+
+// ---------- the audit, on screen ------------------------------------------
+// The piece states what the numbers say for the condition being viewed, so a
+// visitor reads the result rather than the intention.
+function showAudit() {
+  const key = visionCond || "normal";
+  const a = DATA.audit[key];
+  auditEl.innerHTML =
+    `${key} &middot; min &Delta;E ${a.adjacent_min} &middot; ` +
+    `${a.adjacent_below_floor}/${a.adjacent_steps} steps below floor 6<br>` +
+    `worst ${a.worst_adjacent} &middot; luminance reversals ${a.luminance_reversals}`;
+}
+
+// ---------- controls -------------------------------------------------------
+const playBtn = document.getElementById("play");
+playBtn.addEventListener("click", () => {
+  if (!ac) audioInit();
+  if (ac.state === "suspended") ac.resume();
+  playing = !playing;
+  playBtn.textContent = playing ? "pause" : "play";
+});
+document.getElementById("restart").addEventListener("click", restart);
+document.getElementById("vision").addEventListener("change", ev => {
+  visionCond = ev.target.value;
+  showAudit();
+});
+
+restart();
+showAudit();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

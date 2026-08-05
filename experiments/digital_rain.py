@@ -42,7 +42,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE / "output"
 HTML = [HERE / n for n in ("digital_rain.html",
                            "digital_rain_ambient.html",
-                           "digital_rain_live.html")]
+                           "digital_rain_live.html",
+                           "digital_rain_dome.html")]
 FLOOR = 6.0
 N_LOW, N_HIGH = -24, 23          # C2 .. B5, the 48 notes of the poem
 

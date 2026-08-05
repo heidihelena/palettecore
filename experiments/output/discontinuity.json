@@ -1,0 +1,177 @@
+{
+  "model": "pitch-colour helix (angle = pitch class on a closed dE-spaced hue ring, height = lightness = absolute pitch), audited on the exact colours the artworks display",
+  "floor": 6.0,
+  "range": "C2..C6, four pitch classes per octave (C, D, G, A)",
+  "regimes": {
+    "volcano": "endogenous discontinuity: hazard is a rising function of an observable state, so precursors exist and the run can be read backwards",
+    "meteorite": "exogenous discontinuity: arrivals are drawn from a memoryless exponential process, so the hazard is constant and no precursor exists to be found"
+  },
+  "ladder": [
+    {
+      "note": "C2",
+      "pc": "C",
+      "f": 65.41,
+      "L": 0.3,
+      "hue": 0.0,
+      "hex": "#41232D"
+    },
+    {
+      "note": "D2",
+      "pc": "D",
+      "f": 73.42,
+      "L": 0.326,
+      "hue": 81.5,
+      "hex": "#413113"
+    },
+    {
+      "note": "G2",
+      "pc": "G",
+      "f": 98.0,
+      "L": 0.39,
+      "hue": 169.0,
+      "hex": "#1D503F"
+    },
+    {
+      "note": "A2",
+      "pc": "A",
+      "f": 110.0,
+      "L": 0.416,
+      "hue": 255.5,
+      "hex": "#334D6F"
+    },
+    {
+      "note": "C3",
+      "pc": "C",
+      "f": 130.81,
+      "L": 0.455,
+      "hue": 0.0,
+      "hex": "#774555"
+    },
+    {
+      "note": "D3",
+      "pc": "D",
+      "f": 146.83,
+      "L": 0.481,
+      "hue": 81.5,
+      "hex": "#735927"
+    },
+    {
+      "note": "G3",
+      "pc": "G",
+      "f": 196.0,
+      "L": 0.545,
+      "hue": 169.0,
+      "hex": "#348068"
+    },
+    {
+      "note": "A3",
+      "pc": "A",
+      "f": 220.0,
+      "L": 0.571,
+      "hue": 255.5,
+      "hex": "#537AAC"
+    },
+    {
+      "note": "C4",
+      "pc": "C",
+      "f": 261.63,
+      "L": 0.61,
+      "hue": 0.0,
+      "hex": "#B26A81"
+    },
+    {
+      "note": "D4",
+      "pc": "D",
+      "f": 293.67,
+      "L": 0.636,
+      "hue": 81.5,
+      "hex": "#A9843E"
+    },
+    {
+      "note": "G4",
+      "pc": "G",
+      "f": 392.0,
+      "L": 0.7,
+      "hue": 169.0,
+      "hex": "#4CB493"
+    },
+    {
+      "note": "A4",
+      "pc": "A",
+      "f": 440.0,
+      "L": 0.726,
+      "hue": 255.5,
+      "hex": "#75A9ED"
+    },
+    {
+      "note": "C5",
+      "pc": "C",
+      "f": 523.25,
+      "L": 0.765,
+      "hue": 0.0,
+      "hex": "#EC95B0"
+    },
+    {
+      "note": "D5",
+      "pc": "D",
+      "f": 587.33,
+      "L": 0.791,
+      "hue": 81.5,
+      "hex": "#DAB571"
+    },
+    {
+      "note": "G5",
+      "pc": "G",
+      "f": 783.99,
+      "L": 0.855,
+      "hue": 169.0,
+      "hex": "#A6DEC8"
+    },
+    {
+      "note": "A5",
+      "pc": "A",
+      "f": 880.0,
+      "L": 0.881,
+      "hue": 255.5,
+      "hex": "#C1DAFB"
+    },
+    {
+      "note": "C6",
+      "pc": "C",
+      "f": 1046.5,
+      "L": 0.92,
+      "hue": 0.0,
+      "hex": "#FADBE3"
+    }
+  ],
+  "audit": {
+    "normal": {
+      "adjacent_min": 22.2,
+      "adjacent_below_floor": 0,
+      "adjacent_steps": 16,
+      "worst_adjacent": "A5->C6",
+      "pairwise_min": 14.0
+    },
+    "protanopia": {
+      "adjacent_min": 10.8,
+      "adjacent_below_floor": 0,
+      "adjacent_steps": 16,
+      "worst_adjacent": "A2->C3",
+      "pairwise_min": 9.3
+    },
+    "deuteranopia": {
+      "adjacent_min": 12.9,
+      "adjacent_below_floor": 0,
+      "adjacent_steps": 16,
+      "worst_adjacent": "D2->G2",
+      "pairwise_min": 5.2
+    },
+    "tritanopia": {
+      "adjacent_min": 5.3,
+      "adjacent_below_floor": 2,
+      "adjacent_steps": 16,
+      "worst_adjacent": "C2->D2",
+      "pairwise_min": 5.3
+    }
+  }
+}

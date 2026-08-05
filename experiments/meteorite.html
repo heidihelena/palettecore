@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meteorite — Söderfjärden, and the record it left</title>
+<!--
+  Meteorite — exogenous discontinuity, after Söderfjärden.
+
+  The fourth piece of the series, and the pair to volcano.html. It runs the
+  same instrument over a different process, and the difference between the
+  two panels is the argument.
+
+  ARRIVAL. Impacts are drawn from a memoryless (exponential) process at a
+  fixed rate. The hazard is CONSTANT: the expected wait to the next impact is
+  the same at every instant, no matter how long the sky has been empty and no
+  matter what is on screen. There is no state that rises beforehand, because
+  there is no state. The instrument plots the hazard as the flat line it is.
+  Nothing here predicts the next strike, and that is a property of the
+  process rather than a difficulty of watching.
+
+  THE RECORD. The crater the strike leaves is modelled on Söderfjärden, in
+  Ostrobothnia about 10 km south of Vaasa, so the piece shows what an
+  exogenous event actually leaves behind rather than an invented hole. The
+  geometry below is the published geometry, and the cross-section carries a
+  stated vertical exaggeration because the real structure is far wider than
+  it is deep.
+
+    apparent diameter   6.55 km (earlier estimates 5.5-6.6 km)
+    maximum depth       ~300 m
+    rim                 ~55 m, preserved by burial soon after impact
+    central uplift      Precambrian granite, buried
+    fill                Cambrian sandstone and shale
+    surface today       drained farmland, kept dry by a pump station
+
+  And this is why the piece runs deep time after the strike. The structure is
+  invisible from the ground: it was noticed as a circle in Landsat imagery in
+  1975 (Talvitie et al.), and the impact origin was only confirmed in 1985
+  (Lehtovaara) on shock evidence, planar deformation features in quartz,
+  kink bands in mica, polymict breccia in the drill cores. Its age is still
+  contested: 40Ar/39Ar on clast-rich impact melt rock gives a range of
+  640-1880 Ma, against an older reading in the Cambrian.
+
+  So the exogenous case makes a sharper claim than "it could not be
+  predicted". It also could not be READ for a very long time, and became
+  legible only from a new vantage point and with physical evidence that had
+  to be looked for. Its date is not settled now. The volcano is a risk that
+  was present and could have been read; the meteorite is uncertainty that
+  could not have been known, whose record then takes a change of instrument
+  to recover, and remains uncertain after that.
+
+  Sources: Impact Earth database entry for Söderfjärden (impact.uwo.ca);
+  Wikipedia, Söderfjärden; Öhman 2013 on shock features in quartz from
+  Saarijärvi and Söderfjärden. Figures are reported as published, including
+  the disagreement.
+
+  Colours come from the four-class C-D-G-A ladder generated and audited by
+  experiments/discontinuity.py (output/discontinuity.json), the ladder that
+  survives simulated dichromacy. Each impact sounds one note of it, drawn
+  independently of everything else.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica Mono";
+    src: url("/brand/fonts/nudica-mono-medium.woff2") format("woff2");
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Nudica";
+    src: url("/brand/fonts/nudica-medium.woff2") format("woff2");
+    font-weight: 100 599; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #000; overflow: hidden; cursor: default; }
+  canvas { position: fixed; inset: 0; display: block; }
+  #hud {
+    position: fixed; inset: 0; pointer-events: none;
+    font-family: "Nudica", "Avenir Next", system-ui, sans-serif;
+    font-weight: 300; color: #cfc9c2;
+    transition: opacity 1.6s ease; opacity: 1;
+    text-shadow: 0 0 6px #000, 0 0 3px #000;
+  }
+  #hud.rest { opacity: 0; }
+  #title {
+    position: absolute; top: 22px; left: 26px;
+    font-style: italic; font-size: 17px; letter-spacing: .04em;
+  }
+  #sub {
+    position: absolute; top: 46px; left: 26px;
+    font-size: 11.5px; letter-spacing: .10em; opacity: .55;
+    text-transform: lowercase; pointer-events: auto;
+  }
+  #sub a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(207,201,194,.35); }
+  /* The same instrument the volcano carries, over a process with no state. */
+  #panel {
+    position: absolute; right: 26px; top: 22px; width: 268px;
+    font: 300 11px/1.7 "Nudica Mono", ui-monospace, monospace;
+    opacity: .82; pointer-events: none;
+  }
+  #panel .lab { letter-spacing: .16em; text-transform: uppercase; opacity: .5; font-size: 9.5px; }
+  #panel canvas { position: static; width: 268px; height: 62px; display: block; margin: 5px 0 7px; }
+  #panel .row { display: flex; justify-content: space-between; gap: 10px; }
+  #panel .row b { font-weight: 500; }
+  #verdict { margin-top: 8px; font-size: 11px; line-height: 1.55; opacity: .8; }
+  #record { margin-top: 7px; font-size: 10.5px; line-height: 1.5; opacity: .62; }
+  #record.found { color: #F0C674; opacity: .85; }
+  #scalebar {
+    position: absolute; left: 26px; bottom: 58px;
+    font: 300 10px "Nudica Mono", ui-monospace, monospace; opacity: .5;
+    letter-spacing: .1em;
+  }
+  #controls {
+    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; gap: 10px; pointer-events: auto;
+  }
+  #controls button {
+    background: rgba(255,255,255,.06); color: #cfc9c2;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 3px;
+    font: 300 12px "Nudica", system-ui, sans-serif;
+    letter-spacing: .18em; text-transform: lowercase;
+    padding: 6px 16px; cursor: pointer;
+  }
+  #controls button:hover { background: rgba(255,255,255,.14); }
+  #note {
+    position: absolute; left: 26px; bottom: 26px;
+    font-size: 12px; letter-spacing: .12em; opacity: .75;
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="hud">
+  <div id="title">meteorite &middot; s&ouml;derfj&auml;rden</div>
+  <div id="sub">nothing to read, then 640 million years of record &middot;
+    <a href="https://github.com/heidihelena/palettecore" target="_blank" rel="noopener">palettecore</a></div>
+  <div id="panel">
+    <div class="lab">hazard, and the threshold</div>
+    <canvas id="trace" width="536" height="124"></canvas>
+    <div class="row"><span>hazard now</span><b id="v-hazard">0.00</b></div>
+    <div class="row"><span>since last</span><b id="v-since">0 s</b></div>
+    <div class="row"><span>mean wait</span><b id="v-mean">—</b></div>
+    <div class="row"><span>impacts</span><b id="v-count">0</b></div>
+    <div id="verdict">watching</div>
+    <div class="lab" style="margin-top:14px">the record</div>
+    <div class="row"><span>since impact</span><b id="v-age">—</b></div>
+    <div class="row"><span>rim above floor</span><b id="v-rim">—</b></div>
+    <div class="row"><span>fill</span><b id="v-fill">—</b></div>
+    <div id="record">no structure yet.</div>
+  </div>
+  <div id="note"></div>
+  <div id="scalebar"></div>
+  <div id="controls">
+    <button id="pause">pause</button>
+    <button id="sound">sound on</button>
+  </div>
+</div>
+
+<script>
+// BEGIN GENERATED by discontinuity.py — do not edit by hand
+const DATA = {
+ "ladder": [
+  {
+   "note": "C2",
+   "pc": "C",
+   "f": 65.41,
+   "L": 0.3,
+   "hue": 0.0,
+   "hex": "#41232D"
+  },
+  {
+   "note": "D2",
+   "pc": "D",
+   "f": 73.42,
+   "L": 0.326,
+   "hue": 81.5,
+   "hex": "#413113"
+  },
+  {
+   "note": "G2",
+   "pc": "G",
+   "f": 98.0,
+   "L": 0.39,
+   "hue": 169.0,
+   "hex": "#1D503F"
+  },
+  {
+   "note": "A2",
+   "pc": "A",
+   "f": 110.0,
+   "L": 0.416,
+   "hue": 255.5,
+   "hex": "#334D6F"
+  },
+  {
+   "note": "C3",
+   "pc": "C",
+   "f": 130.81,
+   "L": 0.455,
+   "hue": 0.0,
+   "hex": "#774555"
+  },
+  {
+   "note": "D3",
+   "pc": "D",
+   "f": 146.83,
+   "L": 0.481,
+   "hue": 81.5,
+   "hex": "#735927"
+  },
+  {
+   "note": "G3",
+   "pc": "G",
+   "f": 196.0,
+   "L": 0.545,
+   "hue": 169.0,
+   "hex": "#348068"
+  },
+  {
+   "note": "A3",
+   "pc": "A",
+   "f": 220.0,
+   "L": 0.571,
+   "hue": 255.5,
+   "hex": "#537AAC"
+  },
+  {
+   "note": "C4",
+   "pc": "C",
+   "f": 261.63,
+   "L": 0.61,
+   "hue": 0.0,
+   "hex": "#B26A81"
+  },
+  {
+   "note": "D4",
+   "pc": "D",
+   "f": 293.67,
+   "L": 0.636,
+   "hue": 81.5,
+   "hex": "#A9843E"
+  },
+  {
+   "note": "G4",
+   "pc": "G",
+   "f": 392.0,
+   "L": 0.7,
+   "hue": 169.0,
+   "hex": "#4CB493"
+  },
+  {
+   "note": "A4",
+   "pc": "A",
+   "f": 440.0,
+   "L": 0.726,
+   "hue": 255.5,
+   "hex": "#75A9ED"
+  },
+  {
+   "note": "C5",
+   "pc": "C",
+   "f": 523.25,
+   "L": 0.765,
+   "hue": 0.0,
+   "hex": "#EC95B0"
+  },
+  {
+   "note": "D5",
+   "pc": "D",
+   "f": 587.33,
+   "L": 0.791,
+   "hue": 81.5,
+   "hex": "#DAB571"
+  },
+  {
+   "note": "G5",
+   "pc": "G",
+   "f": 783.99,
+   "L": 0.855,
+   "hue": 169.0,
+   "hex": "#A6DEC8"
+  },
+  {
+   "note": "A5",
+   "pc": "A",
+   "f": 880.0,
+   "L": 0.881,
+   "hue": 255.5,
+   "hex": "#C1DAFB"
+  },
+  {
+   "note": "C6",
+   "pc": "C",
+   "f": 1046.5,
+   "L": 0.92,
+   "hue": 0.0,
+   "hex": "#FADBE3"
+  }
+ ],
+ "audit": {
+  "normal": {
+   "adjacent_min": 22.2,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "A5->C6",
+   "pairwise_min": 14.0
+  },
+  "protanopia": {
+   "adjacent_min": 10.8,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "A2->C3",
+   "pairwise_min": 9.3
+  },
+  "deuteranopia": {
+   "adjacent_min": 12.9,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "D2->G2",
+   "pairwise_min": 5.2
+  },
+  "tritanopia": {
+   "adjacent_min": 5.3,
+   "adjacent_below_floor": 2,
+   "adjacent_steps": 16,
+   "worst_adjacent": "C2->D2",
+   "pairwise_min": 5.3
+  }
+ },
+ "machado": {
+  "protanopia": [
+   [
+    0.152286,
+    1.052583,
+    -0.204868
+   ],
+   [
+    0.114503,
+    0.786281,
+    0.099216
+   ],
+   [
+    -0.003882,
+    -0.048116,
+    1.051998
+   ]
+  ],
+  "deuteranopia": [
+   [
+    0.367322,
+    0.860646,
+    -0.227968
+   ],
+   [
+    0.280085,
+    0.672501,
+    0.047413
+   ],
+   [
+    -0.01182,
+    0.04294,
+    0.968881
+   ]
+  ],
+  "tritanopia": [
+   [
+    1.255528,
+    -0.076749,
+    -0.178779
+   ],
+   [
+    -0.078411,
+    0.930809,
+    0.147602
+   ],
+   [
+    0.004733,
+    0.691367,
+    0.3039
+   ]
+  ]
+ }
+};
+// END GENERATED
+
+(() => {
+"use strict";
+if (!DATA) { document.getElementById("title").textContent =
+  "palette not injected — run experiments/discontinuity.py"; return; }
+
+const LADDER = DATA.ladder;
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const TOP = LADDER.length - 1;
+
+// ---------- Söderfjärden's geometry, as published --------------------------
+// Apparent diameter 6.55 km, maximum depth ~300 m, rim ~55 m above the floor
+// level, buried central uplift of Precambrian granite. The structure is 22
+// times wider than it is deep, so the cross-section states its exaggeration
+// rather than quietly flattering the hole.
+const KM = 6.55, DEPTH_M = 300, RIM_M = 55, VE = 6;   // VE = vertical exaggeration
+const SPAN_KM = 11;                                   // how much ground is in view
+
+const canvas = document.getElementById("scene");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, HORIZON = 0;
+let stars = [];
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  HORIZON = H * 0.62;                    // surface line; bedrock is cut away below
+  // A quiet sky. Nothing here carries information about arrivals.
+  const n = Math.max(260, Math.min(1200, Math.round(W * H / 2600)));
+  stars = Array.from({ length: n }, () => ({
+    x: Math.random() * W,
+    y: Math.random() * HORIZON * 0.94,
+    a: 0.10 + Math.random() * 0.34,
+    tw: Math.random() * 6.283,
+  }));
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ---------- the process ----------------------------------------------------
+// Memoryless arrivals: the wait to the next impact is exponential with a fixed
+// rate, so the hazard is constant. This is the whole difference from the
+// volcano, and it is a property of the draw, not of the drawing.
+const RATE = 1 / 26;                      // impacts per second (mean wait 26 s)
+const MEAN_WAIT = 1 / RATE;
+let nextIn = -Math.log(1 - Math.random()) / RATE;
+let sinceLast = 0, count = 0, waitSum = 0;
+let clock = 0, flash = 0, lastNote = 0;
+
+const trace = [];                         // arrivals only; there is no state to plot
+const TRACE_SPAN = 90;
+
+// ---------- the record ----------------------------------------------------
+// After a strike the piece runs deep time: the crater fills, the rim buries,
+// and the surface returns to a flat plain. Söderfjärden is farmland now; the
+// circle was invisible from the ground until Landsat imagery showed it in
+// 1975, and the impact origin was confirmed on shock evidence in 1985.
+let crater = null;      // {age Ma, fill 0..1, cx}
+const MA_PER_SEC = 62;  // deep time, compressed
+const RECOGNISED_MA = 640;   // the youngest end of the contested Ar-Ar range
+
+// ---------- the strike -----------------------------------------------------
+let streak = null;                        // the incoming object, visible for a fraction of a second
+let parts = [];
+function impact() {
+  count += 1;
+  waitSum += sinceLast;
+  trace.push({ t: clock });
+  while (trace.length && trace[0].t < clock - TRACE_SPAN - 5) trace.shift();
+  sinceLast = 0;
+  nextIn = -Math.log(1 - Math.random()) / RATE;
+
+  // The note is drawn independently too: nothing about the strike is a
+  // function of anything the visitor could have been watching.
+  lastNote = (Math.random() * LADDER.length) | 0;
+  const ix = W * (0.30 + Math.random() * 0.40);
+  crater = { age: 0, fill: 0, cx: ix };
+  const from = { x: ix - W * 0.22, y: -H * 0.1 };
+  streak = { x0: from.x, y0: from.y, x1: ix, y1: HORIZON, life: 0, max: 0.34 };
+  flash = 1;
+
+  const [r, g, b] = hexRgb(LADDER[lastNote].hex);
+  for (let i = 0; i < 260; i++) {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.3;
+    const sp = 120 + Math.random() * 620;
+    parts.push({
+      x: ix, y: HORIZON,
+      vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      life: 0, max: 0.9 + Math.random() * 2.0, r, g, b,
+    });
+  }
+  if (parts.length > 1600) parts.splice(0, parts.length - 1600);
+  playStrike(LADDER[lastNote]);
+}
+
+// ---------- sound ----------------------------------------------------------
+let ac = null, master = null, soundOn = false, noiseBuf = null;
+function audioInit() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = 0.0001; master.connect(ac.destination);
+  noiseBuf = ac.createBuffer(1, 2 * ac.sampleRate, ac.sampleRate);
+  const ch = noiseBuf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+}
+function playStrike(entry) {
+  if (!ac || !soundOn) return;
+  const when = ac.currentTime;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(0.16, when + 0.008);   // no approach, only arrival
+  g.gain.exponentialRampToValueAtTime(0.0001, when + 3.4);
+  const lp = ac.createBiquadFilter();
+  lp.type = "lowpass"; lp.frequency.value = Math.min(4200, entry.f * 5);
+  for (const [type, mul, gain] of [["sine", 1, 1], ["sine", 0.5, 0.7], ["triangle", 2, 0.3]]) {
+    const o = ac.createOscillator(); o.type = type;
+    o.frequency.value = entry.f * mul;
+    const og = ac.createGain(); og.gain.value = gain;
+    o.connect(og).connect(lp); o.start(when); o.stop(when + 3.6);
+  }
+  lp.connect(g).connect(master);
+  const br = ac.createBufferSource(); br.buffer = noiseBuf;
+  const bf = ac.createBiquadFilter(); bf.type = "lowpass"; bf.frequency.value = 900;
+  const bg = ac.createGain();
+  bg.gain.setValueAtTime(0.16, when);
+  bg.gain.exponentialRampToValueAtTime(0.0001, when + 1.5);
+  br.connect(bf).connect(bg).connect(master);
+  br.start(when); br.stop(when + 1.6);
+}
+
+// ---------- draw -----------------------------------------------------------
+function drawScene(dt) {
+  ctx.fillStyle = "rgba(0,0,0,0.30)";
+  ctx.fillRect(0, 0, W, H);
+
+  for (const s of stars) {
+    s.tw += dt * 0.7;
+    const a = s.a * (0.72 + 0.28 * Math.sin(s.tw));
+    ctx.fillStyle = `rgba(190,186,200,${a.toFixed(3)})`;
+    ctx.fillRect(s.x, s.y, 1.4, 1.4);
+  }
+
+  const [r, g, b] = hexRgb(LADDER[lastNote].hex);
+
+  if (flash > 0) {
+    flash = Math.max(0, flash - dt * 1.9);
+    const gl = ctx.createLinearGradient(0, HORIZON - H * 0.5, 0, HORIZON);
+    gl.addColorStop(0, "rgba(0,0,0,0)");
+    gl.addColorStop(1, `rgba(${r},${g},${b},${(0.42 * flash).toFixed(3)})`);
+    ctx.fillStyle = gl;
+    ctx.fillRect(0, HORIZON - H * 0.5, W, H * 0.5);
+  }
+
+  if (streak) {
+    streak.life += dt;
+    const k = 1 - streak.life / streak.max;
+    if (k <= 0) streak = null;
+    else {
+      ctx.strokeStyle = `rgba(255,255,255,${(0.85 * k).toFixed(3)})`;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(streak.x0 + (streak.x1 - streak.x0) * (1 - k) * 0.82,
+                 streak.y0 + (streak.y1 - streak.y0) * (1 - k) * 0.82);
+      ctx.lineTo(streak.x1, streak.y1);
+      ctx.stroke();
+    }
+  }
+
+  for (const p of parts) {
+    p.life += dt;
+    p.vy += 520 * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    const k = 1 - p.life / p.max;
+    if (k <= 0) continue;
+    const w = Math.min(0.8, k * 0.8);
+    ctx.fillStyle = `rgba(${Math.round(p.r + (255 - p.r) * w)},${
+      Math.round(p.g + (255 - p.g) * w)},${Math.round(p.b + (255 - p.b) * w)},${
+      (0.2 + 0.7 * k).toFixed(3)})`;
+    ctx.fillRect(p.x, p.y, 2.2, 2.2);
+  }
+  parts = parts.filter(p => p.life < p.max && p.y < H + 40);
+
+  drawGround();
+}
+
+// The cross-section. Depths are the published ones, scaled by the stated
+// vertical exaggeration; the crater profile is a bowl with a raised rim and a
+// central uplift, which is the shape the drill cores describe.
+function pxPerKm() { return W / SPAN_KM; }
+function mToPx(m) { return (m / 1000) * pxPerKm() * VE; }
+
+function craterFloor(x) {
+  if (!crater) return 0;                      // metres below the surface datum
+  const halfPx = (KM / 2) * pxPerKm();
+  const u = (x - crater.cx) / halfPx;         // -1..1 across the crater
+  if (Math.abs(u) > 1.28) return 0;
+  if (Math.abs(u) > 1) {                      // the rim, outside the bowl
+    const k = (1.28 - Math.abs(u)) / 0.28;
+    return -RIM_M * Math.sin(k * Math.PI) * 0.9;
+  }
+  const bowl = DEPTH_M * (1 - u * u);
+  const uplift = DEPTH_M * 0.42 * Math.exp(-Math.pow(u / 0.24, 2));  // central uplift
+  return Math.max(0, bowl - uplift);
+}
+
+function drawGround() {
+  // bedrock
+  ctx.fillStyle = "rgba(18,15,23,0.99)";
+  ctx.fillRect(0, HORIZON, W, H - HORIZON);
+
+  if (!crater) {
+    ctx.strokeStyle = "rgba(120,113,133,0.5)"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(0, HORIZON); ctx.lineTo(W, HORIZON); ctx.stroke();
+    return;
+  }
+
+  // the excavated structure, cut into the bedrock
+  const [r, g, b] = hexRgb(LADDER[lastNote].hex);
+  ctx.beginPath();
+  ctx.moveTo(0, HORIZON);
+  for (let x = 0; x <= W; x += 3) ctx.lineTo(x, HORIZON + mToPx(craterFloor(x)));
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = "rgba(26,22,32,1)";
+  ctx.fill();
+
+  // the fill: Cambrian sandstone and shale, arriving over deep time
+  if (crater.fill > 0) {
+    // Sandstone and shale accumulate on the crater floor and rise toward the
+    // datum, so this band sits above the floor line, not below it.
+    ctx.fillStyle = "rgba(58,50,64,0.96)";
+    for (let x = 0; x <= W; x += 3) {
+      const d = craterFloor(x);
+      if (d <= 0) continue;
+      const floorY = HORIZON + mToPx(d);
+      const topY = HORIZON + mToPx(d * (1 - crater.fill));
+      ctx.fillRect(x, topY, 3.4, floorY - topY);
+    }
+  }
+
+  // the structure's outline, still warm early on and cooling as time runs
+  const heat = Math.max(0, 1 - crater.age / 40);
+  ctx.strokeStyle = heat > 0.02
+    ? `rgba(${r},${g},${b},${(0.20 + 0.6 * heat).toFixed(3)})`
+    : "rgba(120,113,133,0.42)";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let x = 0; x <= W; x += 3) {
+    const y = HORIZON + mToPx(craterFloor(x));
+    x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // the present-day surface: once the fill is complete this is flat farmland,
+  // and the structure below it stops being visible from here at all.
+  if (crater.fill > 0.55) {
+    const a = Math.min(0.75, (crater.fill - 0.55) / 0.45);
+    ctx.strokeStyle = `rgba(150,143,162,${(0.28 + 0.5 * a).toFixed(3)})`;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(0, HORIZON); ctx.lineTo(W, HORIZON); ctx.stroke();
+  }
+}
+
+// ---------- the instrument -------------------------------------------------
+// Same panel as the volcano, deliberately. There the trace climbs before an
+// eruption; here it is flat, because a memoryless process has no precursor.
+const tctx = document.getElementById("trace").getContext("2d");
+function drawTrace() {
+  const w = 536, h = 124;
+  tctx.clearRect(0, 0, w, h);
+  const t0 = clock - TRACE_SPAN;
+  const x = t => ((t - t0) / TRACE_SPAN) * w;
+
+  tctx.strokeStyle = "rgba(240,198,116,0.55)";
+  tctx.setLineDash([5, 5]); tctx.lineWidth = 2;
+  tctx.beginPath(); tctx.moveTo(0, 26); tctx.lineTo(w, 26); tctx.stroke();
+  tctx.setLineDash([]);
+
+  for (const p of trace) {
+    if (p.t < t0) continue;
+    tctx.strokeStyle = "rgba(207,201,194,0.5)"; tctx.lineWidth = 2;
+    tctx.beginPath(); tctx.moveTo(x(p.t), 4); tctx.lineTo(x(p.t), h - 4); tctx.stroke();
+  }
+
+  // the hazard: constant, and therefore a straight line at every instant
+  tctx.strokeStyle = "rgba(207,201,194,0.9)"; tctx.lineWidth = 2.4;
+  const y = h - 8 - (RATE / 0.1) * (h - 34);
+  tctx.beginPath(); tctx.moveTo(0, y); tctx.lineTo(w, y); tctx.stroke();
+}
+
+const el = id => document.getElementById(id);
+function updatePanel() {
+  el("v-hazard").textContent = RATE.toFixed(2);
+  el("v-since").textContent = `${sinceLast.toFixed(0)} s`;
+  el("v-mean").textContent = count ? `${(waitSum / count).toFixed(1)} s` : "—";
+  el("v-count").textContent = String(count);
+  el("verdict").textContent = count < 3
+    ? `the hazard is flat. the expected wait is ${MEAN_WAIT.toFixed(0)} s from any instant.`
+    : `waiting longer does not bring it closer: still ${MEAN_WAIT.toFixed(0)} s expected, ` +
+      `from now, as from the start.`;
+
+  const rec = el("record");
+  if (!crater) {
+    el("v-age").textContent = "—";
+    el("v-rim").textContent = "—";
+    el("v-fill").textContent = "—";
+    rec.className = "";
+    rec.textContent = "no structure yet.";
+  } else {
+    const rimLeft = RIM_M * (1 - crater.fill);
+    el("v-age").textContent = `${Math.round(crater.age)} Ma`;
+    el("v-rim").textContent = `${rimLeft.toFixed(0)} m`;
+    el("v-fill").textContent = `${Math.round(crater.fill * 100)} %`;
+    if (crater.fill < 0.55) {
+      rec.className = "";
+      rec.textContent = "the structure is open. sandstone and shale are filling it.";
+    } else if (crater.age < RECOGNISED_MA) {
+      rec.className = "";
+      rec.textContent = "buried. from the ground this is a flat plain, and nothing "
+        + "at the surface says an impact happened here.";
+    } else {
+      rec.className = "found";
+      rec.textContent = "the circle was seen from orbit in 1975 and the impact origin "
+        + "confirmed on shocked quartz in 1985. the date is still contested: "
+        + "640 to 1880 Ma.";
+    }
+  }
+  const e = LADDER[lastNote];
+  const [r, g, b] = hexRgb(e.hex);
+  el("note").innerHTML = `<span style="color:rgb(${r},${g},${b})">&#9679;</span> ${e.note}`;
+}
+
+// ---------- loop -----------------------------------------------------------
+let prev = null, playing = true;
+function frame(ms) {
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+  if (playing) {
+    clock += dt; sinceLast += dt; nextIn -= dt;
+    if (nextIn <= 0) impact();
+    if (crater) {
+      crater.age += MA_PER_SEC * dt;
+      // Burial was fast, which is why the rim survived at all; the plain took
+      // very much longer to become a plain.
+      crater.fill = Math.min(1, 1 - Math.exp(-crater.age / 55));
+    }
+  }
+  el("scalebar").textContent = crater
+    ? `${KM} km across  ·  ${DEPTH_M} m deep  ·  vertical exaggeration ${VE}×`
+    : "";
+  drawScene(dt);
+  drawTrace();
+  updatePanel();
+  requestAnimationFrame(frame);
+}
+
+el("pause").addEventListener("click", ev => {
+  playing = !playing;
+  ev.target.textContent = playing ? "pause" : "resume";
+});
+el("sound").addEventListener("click", ev => {
+  if (!ac) audioInit();
+  if (ac.state === "suspended") ac.resume();
+  soundOn = !soundOn;
+  master.gain.setTargetAtTime(soundOn ? 0.85 : 0.0001, ac.currentTime, 0.2);
+  ev.target.textContent = soundOn ? "sound off" : "sound on";
+});
+
+const hud = document.getElementById("hud");
+let restTimer = null;
+function wake() {
+  hud.classList.remove("rest");
+  clearTimeout(restTimer);
+  restTimer = setTimeout(() => hud.classList.add("rest"), 6000);
+}
+window.addEventListener("pointermove", wake);
+wake();
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

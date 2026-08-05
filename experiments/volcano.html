@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volcano — the signal was there</title>
+<!--
+  Volcano — endogenous discontinuity.
+
+  The third piece of the series. Pressure builds INSIDE the system: strain
+  accumulates, and the hazard of eruption is a rising function of that strain.
+  Because the hazard depends on an observable state, precursors exist. Tremor
+  rate, inflation and the pitch of the harmonic tremor all climb before every
+  eruption, and the instrument panel plots the strain against the threshold
+  as it happens, so a visitor can watch the eruption become likely and can
+  read the run backwards afterwards. The panel reports how long the strain
+  had been above the threshold when the eruption came.
+
+  That is the claim this build carries: a risk that was present and could
+  have been read. Its pair, meteorite.html, runs the same instrument over a
+  memoryless process where there is nothing to read.
+
+  Colours come from the four-class C-D-G-A ladder generated and audited by
+  experiments/discontinuity.py (output/discontinuity.json). This is the piece
+  about whether a signal was legible, so it uses the ladder that survives
+  simulated dichromacy rather than the chromatic one that collapses.
+
+  Note height carries strain: the deeper the system is at rest, the lower the
+  note; the eruption sounds as the ladder climbing.
+-->
+<style>
+  @font-face {
+    font-family: "Nudica Mono";
+    src: url("/brand/fonts/nudica-mono-medium.woff2") format("woff2");
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Nudica";
+    src: url("/brand/fonts/nudica-medium.woff2") format("woff2");
+    font-weight: 100 599; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: dark; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #000; overflow: hidden; cursor: default; }
+  canvas { position: fixed; inset: 0; display: block; }
+  #hud {
+    position: fixed; inset: 0; pointer-events: none;
+    font-family: "Nudica", "Avenir Next", system-ui, sans-serif;
+    font-weight: 300; color: #cfc9c2;
+    transition: opacity 1.6s ease; opacity: 1;
+    text-shadow: 0 0 6px #000, 0 0 3px #000;
+  }
+  #hud.rest { opacity: 0; }
+  #title {
+    position: absolute; top: 22px; left: 26px;
+    font-style: italic; font-size: 17px; letter-spacing: .04em;
+  }
+  #sub {
+    position: absolute; top: 46px; left: 26px;
+    font-size: 11.5px; letter-spacing: .10em; opacity: .55;
+    text-transform: lowercase; pointer-events: auto;
+  }
+  #sub a { color: inherit; text-decoration: none; border-bottom: 1px solid rgba(207,201,194,.35); }
+  /* The instrument. Both catastrophes carry the same one; that is the argument. */
+  #panel {
+    position: absolute; right: 26px; top: 22px; width: 268px;
+    font: 300 11px/1.7 "Nudica Mono", ui-monospace, monospace;
+    opacity: .82; pointer-events: none;
+  }
+  #panel .lab { letter-spacing: .16em; text-transform: uppercase; opacity: .5; font-size: 9.5px; }
+  #panel canvas { position: static; width: 268px; height: 62px; display: block; margin: 5px 0 7px; }
+  #panel .row { display: flex; justify-content: space-between; gap: 10px; }
+  #panel .row b { font-weight: 500; }
+  #verdict { margin-top: 8px; font-size: 11px; line-height: 1.55; opacity: .8; }
+  #verdict.hot { color: #F0C674; }
+  #controls {
+    position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; gap: 10px; pointer-events: auto;
+  }
+  #controls button {
+    background: rgba(255,255,255,.06); color: #cfc9c2;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 3px;
+    font: 300 12px "Nudica", system-ui, sans-serif;
+    letter-spacing: .18em; text-transform: lowercase;
+    padding: 6px 16px; cursor: pointer;
+  }
+  #controls button:hover { background: rgba(255,255,255,.14); }
+  #note {
+    position: absolute; left: 26px; bottom: 26px;
+    font-size: 12px; letter-spacing: .12em; opacity: .75;
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="hud">
+  <div id="title">volcano</div>
+  <div id="sub">the pressure was inside &middot;
+    <a href="https://github.com/heidihelena/palettecore" target="_blank" rel="noopener">palettecore</a></div>
+  <div id="panel">
+    <div class="lab">strain, and the threshold</div>
+    <canvas id="trace" width="536" height="124"></canvas>
+    <div class="row"><span>strain</span><b id="v-strain">0.00</b></div>
+    <div class="row"><span>tremor / min</span><b id="v-tremor">0</b></div>
+    <div class="row"><span>hazard now</span><b id="v-hazard">0.00</b></div>
+    <div class="row"><span>eruptions</span><b id="v-count">0</b></div>
+    <div id="verdict">watching</div>
+  </div>
+  <div id="note"></div>
+  <div id="controls">
+    <button id="pause">pause</button>
+    <button id="sound">sound on</button>
+  </div>
+</div>
+
+<script>
+// BEGIN GENERATED by discontinuity.py — do not edit by hand
+const DATA = {
+ "ladder": [
+  {
+   "note": "C2",
+   "pc": "C",
+   "f": 65.41,
+   "L": 0.3,
+   "hue": 0.0,
+   "hex": "#41232D"
+  },
+  {
+   "note": "D2",
+   "pc": "D",
+   "f": 73.42,
+   "L": 0.326,
+   "hue": 81.5,
+   "hex": "#413113"
+  },
+  {
+   "note": "G2",
+   "pc": "G",
+   "f": 98.0,
+   "L": 0.39,
+   "hue": 169.0,
+   "hex": "#1D503F"
+  },
+  {
+   "note": "A2",
+   "pc": "A",
+   "f": 110.0,
+   "L": 0.416,
+   "hue": 255.5,
+   "hex": "#334D6F"
+  },
+  {
+   "note": "C3",
+   "pc": "C",
+   "f": 130.81,
+   "L": 0.455,
+   "hue": 0.0,
+   "hex": "#774555"
+  },
+  {
+   "note": "D3",
+   "pc": "D",
+   "f": 146.83,
+   "L": 0.481,
+   "hue": 81.5,
+   "hex": "#735927"
+  },
+  {
+   "note": "G3",
+   "pc": "G",
+   "f": 196.0,
+   "L": 0.545,
+   "hue": 169.0,
+   "hex": "#348068"
+  },
+  {
+   "note": "A3",
+   "pc": "A",
+   "f": 220.0,
+   "L": 0.571,
+   "hue": 255.5,
+   "hex": "#537AAC"
+  },
+  {
+   "note": "C4",
+   "pc": "C",
+   "f": 261.63,
+   "L": 0.61,
+   "hue": 0.0,
+   "hex": "#B26A81"
+  },
+  {
+   "note": "D4",
+   "pc": "D",
+   "f": 293.67,
+   "L": 0.636,
+   "hue": 81.5,
+   "hex": "#A9843E"
+  },
+  {
+   "note": "G4",
+   "pc": "G",
+   "f": 392.0,
+   "L": 0.7,
+   "hue": 169.0,
+   "hex": "#4CB493"
+  },
+  {
+   "note": "A4",
+   "pc": "A",
+   "f": 440.0,
+   "L": 0.726,
+   "hue": 255.5,
+   "hex": "#75A9ED"
+  },
+  {
+   "note": "C5",
+   "pc": "C",
+   "f": 523.25,
+   "L": 0.765,
+   "hue": 0.0,
+   "hex": "#EC95B0"
+  },
+  {
+   "note": "D5",
+   "pc": "D",
+   "f": 587.33,
+   "L": 0.791,
+   "hue": 81.5,
+   "hex": "#DAB571"
+  },
+  {
+   "note": "G5",
+   "pc": "G",
+   "f": 783.99,
+   "L": 0.855,
+   "hue": 169.0,
+   "hex": "#A6DEC8"
+  },
+  {
+   "note": "A5",
+   "pc": "A",
+   "f": 880.0,
+   "L": 0.881,
+   "hue": 255.5,
+   "hex": "#C1DAFB"
+  },
+  {
+   "note": "C6",
+   "pc": "C",
+   "f": 1046.5,
+   "L": 0.92,
+   "hue": 0.0,
+   "hex": "#FADBE3"
+  }
+ ],
+ "audit": {
+  "normal": {
+   "adjacent_min": 22.2,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "A5->C6",
+   "pairwise_min": 14.0
+  },
+  "protanopia": {
+   "adjacent_min": 10.8,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "A2->C3",
+   "pairwise_min": 9.3
+  },
+  "deuteranopia": {
+   "adjacent_min": 12.9,
+   "adjacent_below_floor": 0,
+   "adjacent_steps": 16,
+   "worst_adjacent": "D2->G2",
+   "pairwise_min": 5.2
+  },
+  "tritanopia": {
+   "adjacent_min": 5.3,
+   "adjacent_below_floor": 2,
+   "adjacent_steps": 16,
+   "worst_adjacent": "C2->D2",
+   "pairwise_min": 5.3
+  }
+ },
+ "machado": {
+  "protanopia": [
+   [
+    0.152286,
+    1.052583,
+    -0.204868
+   ],
+   [
+    0.114503,
+    0.786281,
+    0.099216
+   ],
+   [
+    -0.003882,
+    -0.048116,
+    1.051998
+   ]
+  ],
+  "deuteranopia": [
+   [
+    0.367322,
+    0.860646,
+    -0.227968
+   ],
+   [
+    0.280085,
+    0.672501,
+    0.047413
+   ],
+   [
+    -0.01182,
+    0.04294,
+    0.968881
+   ]
+  ],
+  "tritanopia": [
+   [
+    1.255528,
+    -0.076749,
+    -0.178779
+   ],
+   [
+    -0.078411,
+    0.930809,
+    0.147602
+   ],
+   [
+    0.004733,
+    0.691367,
+    0.3039
+   ]
+  ]
+ }
+};
+// END GENERATED
+
+(() => {
+"use strict";
+if (!DATA) { document.getElementById("title").textContent =
+  "palette not injected — run experiments/discontinuity.py"; return; }
+
+const LADDER = DATA.ladder;               // C2..C6, 17 entries
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const TOP = LADDER.length - 1;
+
+const canvas = document.getElementById("scene");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, GROUND = 0, PEAK = 0, CX = 0;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  GROUND = H * 0.86;
+  PEAK = H * 0.34;
+  CX = W * 0.5;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ---------- the system -----------------------------------------------------
+// Strain accumulates with noise. The hazard of eruption is a rising function
+// of strain, and every observable in the piece is driven by the same strain,
+// which is precisely why precursors exist here.
+let strain = 0.05;
+const THRESHOLD = 0.72;                   // where the hazard becomes appreciable
+let hazard = 0;
+let erupting = 0;                         // seconds of eruption remaining
+let count = 0;
+let aboveSince = null;                    // when strain last crossed the threshold
+let lastLead = null;                      // how long the warning ran, last time
+let tremorTimes = [];                     // timestamps of recent tremor events
+let clock = 0;
+
+const trace = [];                         // {t, strain, erupt}
+const TRACE_SPAN = 90;                    // seconds shown in the instrument
+
+function hazardOf(s) {
+  // Zero below the threshold, then climbing. The shape is the claim: the
+  // eruption is never a surprise to an instrument watching strain. It is
+  // tuned so the warning typically runs tens of seconds rather than a moment,
+  // because a lead time too short to notice would make the piece argue the
+  // opposite of what it says.
+  return s <= THRESHOLD ? 0 : Math.pow((s - THRESHOLD) / (1 - THRESHOLD), 2.4) * 0.34;
+}
+
+// ---------- particles ------------------------------------------------------
+let parts = [];                           // {x,y,vx,vy,life,max,note,ash}
+function erupt() {
+  erupting = 2.6 + Math.random() * 2.2;
+  count += 1;
+  lastLead = aboveSince === null ? 0 : clock - aboveSince;
+  trace.push({ t: clock, strain, erupt: true });
+  for (let i = 0; i < 320; i++) throwUp(1);
+  playBurst();
+}
+function throwUp(power) {
+  const a = -Math.PI / 2 + (Math.random() - 0.5) * 0.95;
+  const sp = (170 + Math.random() * 430) * power;
+  // Height in the fountain reads as pitch: the ladder climbing out of the vent.
+  parts.push({
+    x: CX + (Math.random() - 0.5) * W * 0.035,
+    y: PEAK,
+    vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+    life: 0, max: 1.6 + Math.random() * 2.4,
+    note: Math.min(TOP, 4 + ((Math.random() * (TOP - 3)) | 0)),
+    ash: Math.random() < 0.42,
+  });
+  if (parts.length > 1400) parts.shift();
+}
+
+// ---------- sound: harmonic tremor, and the burst -------------------------
+let ac = null, master = null, drone = null, droneGain = null, droneFilt = null;
+let soundOn = false;
+function audioInit() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.gain.value = 0.0001; master.connect(ac.destination);
+  // Harmonic tremor: a low drone whose pitch and loudness track strain, so the
+  // room hears the system loading before it sees the eruption.
+  drone = ac.createOscillator(); drone.type = "sawtooth";
+  droneFilt = ac.createBiquadFilter(); droneFilt.type = "lowpass";
+  droneFilt.frequency.value = 220; droneFilt.Q.value = 6;
+  droneGain = ac.createGain(); droneGain.gain.value = 0.05;
+  drone.frequency.value = LADDER[0].f;
+  drone.connect(droneFilt).connect(droneGain).connect(master);
+  drone.start();
+}
+function playBurst() {
+  if (!ac || !soundOn) return;
+  const t0 = ac.currentTime;
+  // The ladder climbing: the release sounds as the pitch the strain reached.
+  for (let i = 0; i < 7; i++) {
+    const e = LADDER[Math.min(TOP, 5 + i * 2)];
+    const when = t0 + i * 0.085;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.075, when + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 2.6);
+    const o = ac.createOscillator();
+    o.type = i % 2 ? "triangle" : "sine";
+    o.frequency.value = e.f;
+    const lp = ac.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.value = Math.min(6000, e.f * 6);
+    o.connect(lp).connect(g).connect(master);
+    o.start(when); o.stop(when + 2.8);
+  }
+}
+
+// ---------- draw -----------------------------------------------------------
+function noteForStrain() {
+  return Math.min(TOP, Math.max(0, Math.round(strain * TOP)));
+}
+
+function drawScene(dt) {
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.fillRect(0, 0, W, H);
+
+  const swell = 1 + 0.035 * strain;       // inflation: the edifice grows under load
+  const half = W * 0.26 * swell;
+  const peakY = PEAK - (GROUND - PEAK) * (swell - 1) * 0.5;
+
+  // the vent glow, coloured by the note the strain has reached
+  const e = LADDER[noteForStrain()];
+  const [r, g, b] = hexRgb(e.hex);
+  const glow = ctx.createRadialGradient(CX, peakY, 0, CX, peakY, 90 + 240 * strain);
+  glow.addColorStop(0, `rgba(${r},${g},${b},${(0.16 + 0.6 * strain).toFixed(3)})`);
+  glow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(CX - 340, peakY - 300, 680, 600);
+
+  // the edifice, drawn as a scatter so it belongs to the same visual family
+  ctx.fillStyle = "rgba(26,22,32,0.96)";
+  ctx.beginPath();
+  ctx.moveTo(CX - half, GROUND);
+  ctx.lineTo(CX - W * 0.028 * swell, peakY);
+  ctx.lineTo(CX + W * 0.028 * swell, peakY);
+  ctx.lineTo(CX + half, GROUND);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${r},${g},${b},${(0.10 + 0.34 * strain).toFixed(3)})`;
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+
+  // particles
+  for (const p of parts) {
+    p.life += dt;
+    p.vy += 620 * dt;                     // gravity
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    const k = 1 - p.life / p.max;
+    if (k <= 0) continue;
+    if (p.ash) {
+      ctx.fillStyle = `rgba(150,142,158,${(0.30 * k).toFixed(3)})`;
+    } else {
+      const [pr, pg, pb] = hexRgb(LADDER[p.note].hex);
+      const w = Math.min(0.75, k * 0.75);  // hottest at the vent, cooling as it falls
+      ctx.fillStyle = `rgba(${Math.round(pr + (255 - pr) * w)},${
+        Math.round(pg + (255 - pg) * w)},${Math.round(pb + (255 - pb) * w)},${
+        (0.25 + 0.7 * k).toFixed(3)})`;
+    }
+    const s = p.ash ? 2.6 : 2.2;
+    ctx.fillRect(p.x, p.y, s, s);
+  }
+  parts = parts.filter(p => p.life < p.max && p.y < H + 40);
+}
+
+// ---------- the instrument -------------------------------------------------
+const tctx = document.getElementById("trace").getContext("2d");
+function drawTrace() {
+  const w = 536, h = 124;
+  tctx.clearRect(0, 0, w, h);
+  const t1 = clock, t0 = clock - TRACE_SPAN;
+  const x = t => ((t - t0) / TRACE_SPAN) * w;
+  const y = s => h - 8 - s * (h - 20);
+
+  // the threshold, drawn as the line it is
+  tctx.strokeStyle = "rgba(240,198,116,0.55)";
+  tctx.setLineDash([5, 5]); tctx.lineWidth = 2;
+  tctx.beginPath(); tctx.moveTo(0, y(THRESHOLD)); tctx.lineTo(w, y(THRESHOLD)); tctx.stroke();
+  tctx.setLineDash([]);
+
+  // eruptions, marked where they happened
+  for (const p of trace) {
+    if (!p.erupt || p.t < t0) continue;
+    tctx.strokeStyle = "rgba(207,201,194,0.5)"; tctx.lineWidth = 2;
+    tctx.beginPath(); tctx.moveTo(x(p.t), 4); tctx.lineTo(x(p.t), h - 4); tctx.stroke();
+  }
+
+  tctx.strokeStyle = "rgba(207,201,194,0.9)"; tctx.lineWidth = 2.4;
+  tctx.beginPath();
+  let started = false;
+  for (const p of trace) {
+    if (p.t < t0) continue;
+    const px = x(p.t), py = y(p.strain);
+    if (!started) { tctx.moveTo(px, py); started = true; } else tctx.lineTo(px, py);
+  }
+  tctx.stroke();
+}
+
+const el = id => document.getElementById(id);
+function updatePanel() {
+  const cutoff = clock - 60;
+  tremorTimes = tremorTimes.filter(t => t > cutoff);
+  el("v-strain").textContent = strain.toFixed(2);
+  el("v-tremor").textContent = String(tremorTimes.length);
+  el("v-hazard").textContent = hazard.toFixed(2);
+  el("v-count").textContent = String(count);
+  const v = el("verdict");
+  if (erupting > 0) {
+    v.className = "hot";
+    v.textContent = lastLead === null ? "erupting"
+      : `erupting. the strain had been above the line for ${lastLead.toFixed(0)} s.`;
+  } else if (strain > THRESHOLD) {
+    v.className = "hot";
+    v.textContent = `above the line for ${(clock - aboveSince).toFixed(0)} s. the hazard is rising.`;
+  } else {
+    v.className = "";
+    v.textContent = lastLead === null
+      ? "below the line. the hazard is zero while the strain is."
+      : `below the line. last warning ran ${lastLead.toFixed(0)} s.`;
+  }
+  const e = LADDER[noteForStrain()];
+  const [r, g, b] = hexRgb(e.hex);
+  el("note").innerHTML = `<span style="color:rgb(${r},${g},${b})">&#9679;</span> ${e.note}`;
+}
+
+// ---------- loop -----------------------------------------------------------
+let prev = null, playing = true, sinceSample = 0;
+
+function frame(ms) {
+  if (prev === null) prev = ms;
+  const dt = Math.min(0.05, (ms - prev) / 1000); prev = ms;
+
+  if (playing) {
+    clock += dt;
+    if (erupting > 0) {
+      erupting -= dt;
+      // The release: strain drains as the system empties.
+      strain = Math.max(0.04, strain - dt * 0.34);
+      if (Math.random() < 0.85) throwUp(0.55);
+      if (erupting <= 0) aboveSince = strain > THRESHOLD ? clock : null;
+    } else {
+      // Loading, with noise. The trend is the signal; the noise is why it
+      // takes watching rather than glancing. Above the threshold the system
+      // stiffens, so the strain lingers in the warning band instead of
+      // rushing through it.
+      const load = strain > THRESHOLD ? 0.0042 : 0.0165;
+      strain = Math.min(1, strain + dt * (load + 0.35 * load * Math.random()));
+      const wasAbove = aboveSince !== null;
+      if (strain > THRESHOLD && !wasAbove) aboveSince = clock;
+      if (strain <= THRESHOLD) aboveSince = null;
+      hazard = hazardOf(strain);
+      // Precursory tremor: rate rises with strain, so it is observable early.
+      const tremorRate = 0.35 + 7.5 * Math.pow(strain, 3);
+      if (Math.random() < tremorRate * dt) {
+        tremorTimes.push(clock);
+        for (let i = 0; i < 3; i++) throwUp(0.16);
+      }
+      if (Math.random() < hazard * dt) erupt();
+    }
+
+    sinceSample += dt;
+    if (sinceSample > 0.25) {
+      sinceSample = 0;
+      trace.push({ t: clock, strain, erupt: false });
+      while (trace.length && trace[0].t < clock - TRACE_SPAN - 5) trace.shift();
+    }
+
+    if (ac && soundOn) {
+      drone.frequency.setTargetAtTime(LADDER[0].f * (1 + 1.9 * strain), ac.currentTime, 0.4);
+      droneFilt.frequency.setTargetAtTime(150 + 900 * strain, ac.currentTime, 0.4);
+      droneGain.gain.setTargetAtTime(0.02 + 0.075 * Math.pow(strain, 2), ac.currentTime, 0.4);
+    }
+  }
+
+  drawScene(dt);
+  drawTrace();
+  updatePanel();
+  requestAnimationFrame(frame);
+}
+
+// ---------- controls -------------------------------------------------------
+el("pause").addEventListener("click", ev => {
+  playing = !playing;
+  ev.target.textContent = playing ? "pause" : "resume";
+});
+el("sound").addEventListener("click", ev => {
+  if (!ac) audioInit();
+  if (ac.state === "suspended") ac.resume();
+  soundOn = !soundOn;
+  master.gain.setTargetAtTime(soundOn ? 0.85 : 0.0001, ac.currentTime, 0.2);
+  ev.target.textContent = soundOn ? "sound off" : "sound on";
+});
+
+const hud = document.getElementById("hud");
+let restTimer = null;
+function wake() {
+  hud.classList.remove("rest");
+  clearTimeout(restTimer);
+  restTimer = setTimeout(() => hud.classList.add("rest"), 6000);
+}
+window.addEventListener("pointermove", wake);
+wake();
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
